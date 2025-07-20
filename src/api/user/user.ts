@@ -10,7 +10,7 @@ import type {
     ChangePasswordRequest,
     ApiResponse,
     PageRequest,
-    PageResponse,
+    UserListResponse,
     UploadAvatarResponse
 } from "./user.type";
 
@@ -80,7 +80,7 @@ export const logout = (): Promise<ApiResponse<string>> => {
  * @param params 分页参数
  * @returns Promise<PageResponse<UserInfo>>
  */
-export const getUserList = (params: PageRequest): Promise<PageResponse<UserInfo>> => {
+export const getUserList = (params: PageRequest): Promise<UserListResponse> => {
     return service.get('/user/list', { params });
 };
 

@@ -31,6 +31,15 @@ export interface UserInfo {
     address?: string;
 }
 
+export interface UserList {
+    list: UserInfo[];
+    pagination: {
+        total: number;
+        page: number;
+        pageSize: number;
+    }
+}
+
 export interface UploadInfo {
     filename?: string,
     originalname?: string,
@@ -55,6 +64,12 @@ export interface RegisterResponse {
 export interface GetUserInfoResponse {
     message: string;
     data: UserInfo;
+    code: number;
+}
+
+export interface UserListResponse {
+    message: string;
+    data: UserList;
     code: number;
 }
 
@@ -88,7 +103,11 @@ export interface ApiResponse<T = unknown> {
 export interface PageRequest {
     page: number;
     pageSize: number;
-    keyword?: string;
+    username?: string;
+    phone?: string;
+    role?: string;
+    nickname?: string;
+    email?: string;
 }
 
 // 分页响应数据

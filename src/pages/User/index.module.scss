@@ -1,0 +1,32 @@
+.container {
+    margin: 20px auto;
+    box-sizing: border-box;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.infoCard {
+    padding: 20px;
+    .infoItem {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        .infoItemTitle {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .infoItemContent {
+            font-size: 16px;
+        }
+    }
+}
+
+.formWrap {
+    width: 100%;
+    .formItem {
+        width: 100%;
+    }
+}

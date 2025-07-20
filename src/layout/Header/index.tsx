@@ -52,7 +52,7 @@ const Header = () => {
         <div className={styles.userWrap} >
              <p className={styles.nickname}>{user?.nickname}</p>
              <Popover content={content} title="个人主页">
-              <Avatar icon={<UserOutlined />} src={user?.avatarUrl} size={30} />  
+              <Avatar icon={<UserOutlined />} src={`http://${user?.avatarUrl}`} size={30} />  
              </Popover>
         </div>
         <Modal title="用户信息" open={dialog} onCancel={() => setDialog(false)} onOk={() => setDialog(false)} okText="确认" cancelText="取消">

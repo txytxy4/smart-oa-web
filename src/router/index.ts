@@ -6,6 +6,7 @@ import Goods from '../pages/goods';
 import Login from '@/pages/Login/login';
 import Unknow from '@/pages/404/index';
 import User from '@/pages/User/index';
+import UserList from '@/pages/User/List/index';
 
 const router = createBrowserRouter([
     {
@@ -27,6 +28,10 @@ const router = createBrowserRouter([
             {
                 path: 'user',
                 Component: User,
+            },
+            {
+                path: 'userList',
+                Component: UserList,
             }
         ]
     },

@@ -23,6 +23,11 @@ export default function Menu() {
             key: '/index/goods',
             label: 'Goods',
             icon: <AppstoreOutlined />,
+        },
+        {
+            key: '/index/userList',
+            label: 'UserList',
+            icon: <AppstoreOutlined />,
         }
     ];
     return <AntdMenu onClick={handleClick} style={{height: '100%'}} items={menuItems} />;
