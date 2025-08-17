@@ -10,6 +10,7 @@ interface TableProps<T = unknown> {
     children?: React.ReactNode;
     showCheckbox?: boolean;
     onSelectChange?: (selectedRowKeys: React.Key[], selectedRows: T[]) => void;
+    toolbarRender?: (selectedRowKeys: React.Key[], selectedRows: T[]) => React.ReactNode;
 }
 
 const TableComponent = <T extends object>(props: TableProps<T>) => {
@@ -19,22 +20,27 @@ const TableComponent = <T extends object>(props: TableProps<T>) => {
         pagination, 
         children, 
         showCheckbox = true, 
-        onSelectChange 
+        onSelectChange, 
+        toolbarRender
     } = props;
     
     const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+    const [selectedRows, setSelectedRows] = useState<T[]>([]);
     
     // 配置行选择
     const rowSelection: TableRowSelection<T> | undefined = showCheckbox ? {
         selectedRowKeys,
         onChange: (selectedKeys: React.Key[], selectedRows: T[]) => {
             setSelectedRowKeys(selectedKeys);
+            setSelectedRows(selectedRows);
             onSelectChange?.(selectedKeys, selectedRows);
         }
     } : undefined;
 
     return (
         <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+             {/* 操作栏按钮区 */}
+             {toolbarRender?.(selectedRowKeys, selectedRows)}
             <Table 
                 dataSource={data} 
                 pagination={pagination}
