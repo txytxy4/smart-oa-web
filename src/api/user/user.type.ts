@@ -83,7 +83,6 @@ export interface UpdateUserRequest {
     avatarUrl?: string;
     email?: string;
     phone?: string;
-    avatar?: string;
 }
 
 // 修改密码请求参数

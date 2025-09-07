@@ -19,14 +19,14 @@ import {
   DownloadOutlined,
 } from "@ant-design/icons";
 import TableComponent from "@/components/Table";
-import { getUserList } from "@/api/user/user";
+import { getUserList, register, deleteUser, updateUserInfo } from "@/api/user/user";
 import styles from "./index.module.scss";
 import { exportToExcel } from "@/hooks/exportToExcel";
 
 interface UserData {
   id?: number;
   username?: string;
-  nikcname?: string;
+  nickname?: string;
   email?: string;
   phone?: string;
   address?: string;
@@ -126,10 +126,13 @@ const UserList = () => {
     if (currentUser?.id) {
       try {
         // 这里调用删除API
-        // const res = await deleteUser(currentUser.id);
+        const res = await deleteUser(currentUser.id);
+        if (res.code === 200) {
         message.success("删除成功");
-        // 重新获取数据
-        getUserData();
+          getUserData();
+        } else {
+          message.error(res.message);
+        }
       } catch (error: unknown) {
         console.error(error);
         message.error("删除失败");
@@ -138,14 +141,48 @@ const UserList = () => {
     setIsDeleteModalVisible(false);
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     try {
       // 新增用户逻辑
       console.log("新增用户");
+      const data = {
+        ...newUser,
+      }
+      const res = await register(data);
+      if (res.code === 200) {
+        message.success("新增成功");
+      } else {
+        message.error(res.message);
+      }
+      setIsAddModalVisible(false);
+      setNewUser({
+        username: "",
+        password: "",
+        email: "",
+      });
+      getUserData();
     } catch (e) {
       console.log("error", e);
     }
   };
+
+  const handleUpdate = async () => {
+    try {
+      const data = {
+        ...currentUser,
+      }
+      const res = await updateUserInfo(data);
+      if (res.code === 200) {
+        message.success("更新成功");
+        setIsEditModalVisible(false);
+        getUserData();
+      } else {
+        message.error(res.message);
+      }
+    } catch (e) {
+      console.log("error", e);
+    }
+  }
 
   // 处理文件选择
   const handleFileChange = (info: UploadChangeParam) => {
@@ -342,13 +379,14 @@ const UserList = () => {
           // 处理保存逻辑
           console.log("保存用户信息:", currentUser);
           setIsEditModalVisible(false);
+          handleUpdate();
         }}
       >
         {currentUser && (
           <Form layout="vertical">
-            <Form.Item label="用户名">
+            <Form.Item label="昵称">
               <Input
-                value={currentUser.username}
+                value={currentUser.nickname}
                 onChange={(e) =>
                   setCurrentUser({ ...currentUser, username: e.target.value })
                 }
@@ -374,6 +412,38 @@ const UserList = () => {
                 ]}
               />
             </Form.Item>
+            <Form.Item label="邮箱">
+              <Input
+                value={currentUser?.email}
+                onChange={(e) =>
+                  setCurrentUser({ ...currentUser, email: e.target.value })
+                }
+              />
+            </Form.Item>
+            <Form.Item label="地址">
+              <Input
+                value={currentUser?.address}
+                onChange={(e) =>
+                  setCurrentUser({ ...currentUser, address: e.target.value })
+                }
+              />
+            </Form.Item>
+            <Form.Item label="头像">
+              <Input
+                value={currentUser?.avatarUrl}
+                onChange={(e) =>
+                  setCurrentUser({ ...currentUser, avatarUrl: e.target.value })
+                }
+              />
+            </Form.Item>
+            <Form.Item label="角色">
+              <Select
+                value={currentUser?.role}
+                onChange={(value) =>
+                  setCurrentUser({ ...currentUser, role: value })
+                }
+              />
+            </Form.Item>
           </Form>
         )}
       </Modal>
@@ -392,7 +462,14 @@ const UserList = () => {
       <Modal
         title="新增用户"
         open={isAddModalVisible}
-        onCancel={() => setIsAddModalVisible(false)}
+        onCancel={() => {
+          setIsAddModalVisible(false);
+          setNewUser({
+            username: "",
+            password: "",
+            email: "",
+          });
+        }}
         onOk={handleAdd}
       >
         <Form layout="vertical">
