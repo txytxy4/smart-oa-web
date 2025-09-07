@@ -12,6 +12,7 @@ import {
   Upload,
   Checkbox,
 } from "antd";
+import type { UploadChangeParam } from "antd/es/upload";
 import {
   InboxOutlined,
   FileExcelOutlined,
@@ -97,7 +98,7 @@ const UserList = () => {
       if (res.code === 200) {
         console.log("data", res.data);
         setUserData(res.data.list);
-        setPageData({ ...pageData, total: res.data.pagination.total });
+        setPageData(prev => ({ ...prev, total: res.data.pagination.total }));
       } else {
         message.error(res.message);
       }
@@ -147,9 +148,9 @@ const UserList = () => {
   };
 
   // 处理文件选择
-  const handleFileChange = (info: any) => {
+  const handleFileChange = (info: UploadChangeParam) => {
     const { fileList } = info;
-    if (fileList.length > 0) {
+    if (fileList.length > 0 && fileList[0].originFileObj) {
       setSelectedFile(fileList[0].originFileObj);
     }
   };
@@ -277,7 +278,7 @@ const UserList = () => {
       </Form>
       <TableComponent<UserData>
         data={userData}
-        toolbarRender={(selectedRowKeys, selectedRows) => (
+        toolbarRender={(_, selectedRows) => (
           <div className={styles.tableHeader} style={{width: '100%', textAlign: 'left', marginTop: '20px'}}>
             <Button type="primary" onClick={() => setIsAddModalVisible(true)}>
               + 新增
@@ -288,6 +289,20 @@ const UserList = () => {
             <Button onClick={() => setIsImportModalVisible(true)}>导入</Button>
           </div>
         )}
+        pagination={{
+          current: pageData.page,
+          pageSize: pageData.pageSize,
+          total: pageData.total,
+          showSizeChanger: true,
+          showQuickJumper: true,
+          showTotal: (total) => `共 ${total} 条`,
+          onChange: (page, pageSize) => {
+            setPageData({ ...pageData, page, pageSize });
+          },
+          onShowSizeChange: (_, size) => {
+            setPageData({ ...pageData, page: 1, pageSize: size });
+          },
+        }}
       >
         <Column title="用户名" dataIndex="username" key="username" />
         <Column

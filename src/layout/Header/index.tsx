@@ -1,17 +1,24 @@
 import styles from './index.module.scss';
-import {Image, Avatar, Modal, Popover, Button} from "antd";
-import { UserOutlined } from '@ant-design/icons';
+import {Image, Avatar, Modal, Popover, Button, Breadcrumb} from "antd";
+import { UserOutlined, MenuUnfoldOutlined, MenuFoldOutlined } from '@ant-design/icons';
 import reactIcon from '@/assets/react.svg'
 import { useEffect, useState} from 'react';
 import { getUserInfo } from '@/api/user/user';
 import type { UserInfo } from '@/api/user/user.type';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { getBreadcrumbByPath } from '@/config/breadcrumb';
 
 
-const Header = () => {
+interface HeaderProps {
+    collapsed: boolean;
+    onCollapse: (collapsed: boolean) => void;
+}
+
+const Header = ({ collapsed, onCollapse }: HeaderProps) => {
     const [user, setUser] = useState<UserInfo | null>(null); //用户信息
     const [dialog, setDialog] = useState<boolean>(false);
     const navigate = useNavigate();
+    const location = useLocation();
     useEffect(() => {
       const fetchUserInfo = async () => {
         try {
@@ -37,23 +44,52 @@ const Header = () => {
     }
 
 
-    // 旗袍内容
+    // 弹出菜单内容
     const content = (
-      <div>
-        <Button onClick={() => setDialog(true)}>个人信息</Button>
-        <Button onClick={() => toUser()}>个人主页</Button>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '100px' }}>
+        <Button type="text" onClick={() => setDialog(true)} style={{ textAlign: 'left' }}>
+          个人信息
+        </Button>
+        <Button type="text" onClick={() => toUser()} style={{ textAlign: 'left' }}>
+          个人主页
+        </Button>
       </div>
     )
 
     return (<div className={styles.container}>
-        <div className={styles.icon}>
-            <Image src={reactIcon} width={30} height={30}></Image>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <Button 
+                type="text" 
+                icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                onClick={() => onCollapse(!collapsed)}
+                style={{ fontSize: '16px', width: 40, height: 40 }}
+            />
+            <div style={{ flex: 1 }}>
+                <Breadcrumb 
+                    style={{ color: '#fff' }}
+                    items={getBreadcrumbByPath(location.pathname).map(item => ({
+                        title: item.title,
+                        onClick: item.path ? () => navigate(item.path!) : undefined,
+                        style: item.path ? { cursor: 'pointer' } : undefined
+                    }))}
+                />
+            </div>
         </div>
-        <div className={styles.userWrap} >
-             <p className={styles.nickname}>{user?.nickname}</p>
-             <Popover content={content} title="个人主页">
-              <Avatar icon={<UserOutlined />} src={`http://${user?.avatarUrl}`} size={30} />  
-             </Popover>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div className={styles.icon}>
+                <Image src={reactIcon} width={30} height={30} preview={false}></Image>
+            </div>
+            <div className={styles.userWrap}>
+                 <p className={styles.nickname}>{user?.nickname || '用户'}</p>
+                 <Popover content={content} title="个人主页" placement="bottomRight">
+                  <Avatar 
+                    icon={<UserOutlined />} 
+                    src={user?.avatarUrl ? `http://${user.avatarUrl}` : undefined} 
+                    size={30} 
+                    style={{ cursor: 'pointer' }}
+                  />  
+                 </Popover>
+            </div>
         </div>
         <Modal title="用户信息" open={dialog} onCancel={() => setDialog(false)} onOk={() => setDialog(false)} okText="确认" cancelText="取消">
             <div className={styles.modalWrap}>

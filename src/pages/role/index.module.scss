@@ -1,0 +1,64 @@
+.roleManagement {
+  padding: 20px;
+  background: #fff;
+  border-radius: 6px;
+
+  .searchForm {
+    // margin-bottom: 20px;
+    padding: 20px;
+    background: #fafafa;
+    border-radius: 6px;
+
+    .ant-form-item {
+      margin-bottom: 16px;
+    }
+  }
+
+  .tableHeader {
+    width: 100%;
+    text-align: left;
+    // margin: 20px 0;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+
+    .ant-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+  }
+}
+
+// 状态开关样式
+.ant-switch {
+  &.ant-switch-checked {
+    background-color: #52c41a;
+  }
+}
+
+// 响应式设计
+@media (max-width: 1200px) {
+  .roleManagement {
+    .searchForm {
+      .ant-form-item {
+        margin-bottom: 12px;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .roleManagement {
+    padding: 12px;
+
+    .searchForm {
+      padding: 12px;
+    }
+
+    .tableHeader {
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+  }
+}

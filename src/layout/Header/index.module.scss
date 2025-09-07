@@ -8,13 +8,12 @@
   justify-content: space-between;
   align-items: center;
   height: inherit;
-  width: 100vw;
+  width: 100%;
   box-sizing: border-box;
   padding: 0 20px;
 }
 
 .userWrap {
-  margin-right: 40px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -22,6 +21,8 @@
     line-height: 14px;
     font-size: 12px;
     color: #fff;
+    margin: 0;
+    white-space: nowrap;
   }
 }
 

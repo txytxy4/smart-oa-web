@@ -1,7 +1,8 @@
 import { Menu as AntdMenu } from 'antd';
-import { AppstoreOutlined } from '@ant-design/icons';
+import { DesktopOutlined, UsergroupDeleteOutlined, SettingOutlined, BankOutlined, InsertRowAboveOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd'
 import { useNavigate } from 'react-router';
+import logo from '@/assets/logo.png';
 
 export default function Menu() {
     const navigate = useNavigate();//编程式导航
@@ -11,24 +12,85 @@ export default function Menu() {
     const menuItems = [
         {
             key: '/index/home',
-            label: 'Home',
-            icon: <AppstoreOutlined />,
+            label: '首页',
+            icon: <BankOutlined />,
         },
         {
-            key: '/index/about',
-            label: 'About',
-            icon: <AppstoreOutlined />,
+            key: 'system-management',
+            label: '系统管理',
+            icon: <SettingOutlined />,
+            children: [
+                {
+                    key: '/index/userList',
+                    label: '用户管理',
+                    icon: <UsergroupDeleteOutlined />,
+                },
+                {
+                    key: '/index/role',
+                    label: '角色管理',
+                    icon: <UsergroupDeleteOutlined />,
+                }
+            ]
         },
         {
-            key: '/index/goods',
-            label: 'Goods',
-            icon: <AppstoreOutlined />,
+            key: 'system-monitor',
+            label: '系统监控',
+            icon: <DesktopOutlined />,
+            children: [
+                {
+                    key: '/index/userList',
+                    label: '用户管理',
+                    icon: <UsergroupDeleteOutlined />,
+                }
+            ]
         },
         {
-            key: '/index/userList',
-            label: 'UserList',
-            icon: <AppstoreOutlined />,
+            key: 'system-tools',
+            label: '系统工具',
+            icon: <InsertRowAboveOutlined />,
+            children: [
+                {
+                    key: '/index/userList',
+                    label: '用户管理',
+                    icon: <UsergroupDeleteOutlined />,
+                }
+            ]
         }
     ];
-    return <AntdMenu onClick={handleClick} style={{height: '100%'}} items={menuItems} />;
+    
+    return (
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            {/* Logo 区域 */}
+            <div style={{
+                height: '60px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '16px',
+                background: '#001529'
+            }}>
+                <img 
+                    src={logo} 
+                    alt="Logo" 
+                    style={{
+                        maxHeight: '40px',
+                        maxWidth: '100%',
+                        objectFit: 'contain'
+                    }}
+                />
+            </div>
+            
+            {/* 菜单区域 */}
+            <AntdMenu 
+                onClick={handleClick} 
+                style={{
+                    flex: 1,
+                    borderRight: 0
+                }} 
+                items={menuItems} 
+                mode="inline"
+                theme="dark"
+            />
+        </div>
+    );
 }
