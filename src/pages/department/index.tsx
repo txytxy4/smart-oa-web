@@ -1,0 +1,711 @@
+import { useState, useEffect, useCallback } from "react";
+import {
+  Form,
+  Button,
+  Input,
+  Table,
+  Select,
+  message,
+  Space,
+  Modal,
+  Switch,
+  DatePicker,
+  TreeSelect,
+} from "antd";
+import {
+  PlusOutlined,
+} from "@ant-design/icons";
+import TableComponent from "@/components/Table";
+import styles from "./index.module.scss";
+
+// 部门数据接口
+interface DepartmentData {
+  id: number;
+  deptName: string;
+  parentId: number;
+  orderNum: number;
+  leader?: string;
+  phone?: string;
+  email?: string;
+  status: boolean;
+  createTime: string;
+  children?: DepartmentData[];
+}
+
+// 搜索参数接口
+interface SearchParams {
+  deptName?: string;
+  status?: string;
+  createTime?: [string, string] | null;
+}
+
+// 分页数据接口
+interface PageData {
+  page: number;
+  pageSize: number;
+  total: number;
+}
+
+const { Column } = Table;
+const { RangePicker } = DatePicker;
+
+// 模拟部门数据
+const mockDepartmentData: DepartmentData[] = [
+  {
+    id: 1,
+    deptName: "吉沃科技",
+    parentId: 0,
+    orderNum: 0,
+    leader: "张三",
+    phone: "15888888888",
+    email: "admin@jivo.com",
+    status: true,
+    createTime: "2025-05-26 10:07:40",
+    children: [
+      {
+        id: 2,
+        deptName: "深圳公司",
+        parentId: 1,
+        orderNum: 1,
+        leader: "李四",
+        phone: "15888888889",
+        email: "shenzhen@jivo.com",
+        status: true,
+        createTime: "2025-05-26 10:07:40",
+        children: [
+          {
+            id: 3,
+            deptName: "研发部门",
+            parentId: 2,
+            orderNum: 1,
+            leader: "王五",
+            phone: "15888888890",
+            email: "dev@jivo.com",
+            status: true,
+            createTime: "2025-05-26 10:07:41",
+          },
+          {
+            id: 4,
+            deptName: "市场部门",
+            parentId: 2,
+            orderNum: 2,
+            leader: "赵六",
+            phone: "15888888891",
+            email: "market@jivo.com",
+            status: true,
+            createTime: "2025-05-26 10:07:42",
+          },
+          {
+            id: 5,
+            deptName: "测试部门",
+            parentId: 2,
+            orderNum: 3,
+            leader: "孙七",
+            phone: "15888888892",
+            email: "test@jivo.com",
+            status: true,
+            createTime: "2025-05-26 10:07:42",
+          },
+          {
+            id: 6,
+            deptName: "财务部门",
+            parentId: 2,
+            orderNum: 4,
+            leader: "周八",
+            phone: "15888888893",
+            email: "finance@jivo.com",
+            status: true,
+            createTime: "2025-05-26 10:07:42",
+          },
+          {
+            id: 7,
+            deptName: "运维部门",
+            parentId: 2,
+            orderNum: 5,
+            leader: "吴九",
+            phone: "15888888894",
+            email: "ops@jivo.com",
+            status: true,
+            createTime: "2025-05-26 10:07:43",
+          }
+        ]
+      },
+      {
+        id: 8,
+        deptName: "长沙公司",
+        parentId: 1,
+        orderNum: 2,
+        leader: "陈十",
+        phone: "15888888895",
+        email: "changsha@jivo.com",
+        status: true,
+        createTime: "2025-05-26 10:07:41",
+        children: [
+          {
+            id: 9,
+            deptName: "市场部门",
+            parentId: 8,
+            orderNum: 1,
+            leader: "刘十一",
+            phone: "15888888896",
+            email: "cs-market@jivo.com",
+            status: true,
+            createTime: "2025-05-26 10:07:43",
+          },
+          {
+            id: 10,
+            deptName: "财务部门",
+            parentId: 8,
+            orderNum: 2,
+            leader: "张十二",
+            phone: "15888888897",
+            email: "cs-finance@jivo.com",
+            status: true,
+            createTime: "2025-05-26 10:07:43",
+          }
+        ]
+      }
+    ]
+  }
+];
+
+// 为表格数据添加key和层级信息
+const processTreeData = (data: DepartmentData[]): DepartmentData[] => {
+  const processNode = (node: DepartmentData): DepartmentData => {
+    const processedNode = {
+      ...node,
+      key: node.id.toString(),
+    };
+    
+    if (node.children && node.children.length > 0) {
+      processedNode.children = node.children.map(child => processNode(child));
+    }
+    
+    return processedNode;
+  };
+  
+  return data.map(item => processNode(item));
+};
+
+// 构建部门树选择器数据
+interface TreeSelectNode {
+  value: number;
+  title: string;
+  children?: TreeSelectNode[];
+}
+
+const buildTreeSelectData = (data: DepartmentData[]): TreeSelectNode[] => {
+  return data.map(item => ({
+    value: item.id,
+    title: item.deptName,
+    children: item.children && item.children.length > 0 ? buildTreeSelectData(item.children) : undefined
+  }));
+};
+
+const DepartmentManagement = () => {
+  // 部门数据
+  const [departmentData, setDepartmentData] = useState<DepartmentData[]>([]);
+  const [processedData, setProcessedData] = useState<DepartmentData[]>([]);
+  const [searchParams, setSearchParams] = useState<SearchParams>({
+    deptName: "",
+    status: "",
+    createTime: null,
+  });
+  const [pageData] = useState<PageData>({
+    page: 1,
+    pageSize: 10,
+    total: 0,
+  });
+  const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
+
+  // 模态框状态
+  const [currentDept, setCurrentDept] = useState<DepartmentData | null>(null);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+
+  // 新增部门数据
+  const [newDept, setNewDept] = useState({
+    deptName: "",
+    parentId: 0,
+    orderNum: 0,
+    leader: "",
+    phone: "",
+    email: "",
+    status: true,
+  });
+
+  // 获取部门数据
+  const getDepartmentData = useCallback(async () => {
+    try {
+      // 模拟API调用
+      console.log("搜索参数:", searchParams);
+      console.log("分页参数:", { page: pageData.page, pageSize: pageData.pageSize });
+      
+      // 这里使用模拟数据
+      setDepartmentData(mockDepartmentData);
+      const processedTreeData = processTreeData(mockDepartmentData);
+      setProcessedData(processedTreeData);
+      
+      // 默认展开第一级
+      const firstLevelKeys = mockDepartmentData.map(item => item.id.toString());
+      setExpandedRowKeys(firstLevelKeys);
+      
+      message.success("数据加载成功");
+    } catch (e) {
+      console.log("获取部门数据失败:", e);
+      message.error("获取部门数据失败");
+    }
+  }, [pageData.page, pageData.pageSize, searchParams]);
+
+  // 处理展开/收起
+  const handleExpand = (expanded: boolean, record: DepartmentData) => {
+    const key = record.id.toString();
+    if (expanded) {
+      setExpandedRowKeys(prev => [...prev, key]);
+    } else {
+      setExpandedRowKeys(prev => prev.filter(k => k !== key));
+    }
+  };
+
+  // 展开/收起所有
+  const handleExpandAll = () => {
+    const getAllKeys = (data: DepartmentData[]): string[] => {
+      let keys: string[] = [];
+      data.forEach(item => {
+        keys.push(item.id.toString());
+        if (item.children && item.children.length > 0) {
+          keys = keys.concat(getAllKeys(item.children));
+        }
+      });
+      return keys;
+    };
+
+    if (expandedRowKeys.length > 0) {
+      // 收起所有
+      setExpandedRowKeys([]);
+    } else {
+      // 展开所有
+      const allKeys = getAllKeys(mockDepartmentData);
+      setExpandedRowKeys(allKeys);
+    }
+  };
+
+  // 处理编辑按钮点击
+  const handleEdit = (record: DepartmentData) => {
+    setCurrentDept(record);
+    setIsEditModalVisible(true);
+    console.log("编辑部门:", record);
+  };
+
+  // 处理删除按钮点击
+  const handleDelete = (record: DepartmentData) => {
+    setCurrentDept(record);
+    setIsDeleteModalVisible(true);
+    console.log("删除部门:", record);
+  };
+
+  // 确认删除
+  const confirmDelete = async () => {
+    if (currentDept?.id) {
+      try {
+        // 这里调用删除API
+        console.log("删除部门 ID:", currentDept.id);
+        message.success("删除成功");
+        // 重新获取数据
+        getDepartmentData();
+      } catch (error: unknown) {
+        console.error(error);
+        message.error("删除失败");
+      }
+    }
+    setIsDeleteModalVisible(false);
+  };
+
+  // 处理新增
+  const handleAdd = async () => {
+    try {
+      console.log("新增部门:", newDept);
+      message.success("新增成功");
+      setIsAddModalVisible(false);
+      // 重置表单
+      setNewDept({
+        deptName: "",
+        parentId: 0,
+        orderNum: 0,
+        leader: "",
+        phone: "",
+        email: "",
+        status: true,
+      });
+      // 重新获取数据
+      getDepartmentData();
+    } catch (e) {
+      console.log("新增失败:", e);
+      message.error("新增失败");
+    }
+  };
+
+  // 处理编辑保存
+  const handleEditSave = async () => {
+    try {
+      console.log("保存部门信息:", currentDept);
+      message.success("保存成功");
+      setIsEditModalVisible(false);
+      // 重新获取数据
+      getDepartmentData();
+    } catch (e) {
+      console.log("保存失败:", e);
+      message.error("保存失败");
+    }
+  };
+
+  // 重置搜索条件
+  const handleReset = () => {
+    setSearchParams({
+      deptName: "",
+      status: "",
+      createTime: null,
+    });
+  };
+
+  // 处理状态切换
+  const handleStatusChange = async (id: number, status: boolean) => {
+    try {
+      console.log(`切换部门 ${id} 状态为:`, status);
+      // 这里应该调用API更新状态
+      message.success("状态更新成功");
+      // 重新获取数据
+      getDepartmentData();
+    } catch (e) {
+      console.log("状态更新失败:", e);
+      message.error("状态更新失败");
+    }
+  };
+
+  useEffect(() => {
+    getDepartmentData();
+  }, [getDepartmentData]);
+
+  return (
+    <div className={styles.departmentManagement}>
+      {/* 搜索表单 */}
+      <Form layout="inline" className={styles.searchForm}>
+        <Form.Item label="部门名称" name="deptName">
+          <Input
+            placeholder="请输入部门名称"
+            style={{ width: 200 }}
+            onChange={(e) => {
+              setSearchParams({
+                ...searchParams,
+                deptName: e.target.value,
+              });
+            }}
+            value={searchParams?.deptName}
+          />
+        </Form.Item>
+        <Form.Item label="状态" name="status">
+          <Select
+            placeholder="部门状态"
+            style={{ width: 200 }}
+            options={[
+              { label: "正常", value: "true" },
+              { label: "停用", value: "false" },
+            ]}
+            onChange={(value) => {
+              setSearchParams({
+                ...searchParams,
+                status: value,
+              });
+            }}
+            value={searchParams?.status}
+            allowClear
+          />
+        </Form.Item>
+        <Form.Item label="创建时间" name="createTime">
+          <RangePicker
+            style={{ width: 240 }}
+            onChange={(dates, dateStrings) => {
+              setSearchParams({
+                ...searchParams,
+                createTime: dates ? [dateStrings[0], dateStrings[1]] : null,
+              });
+            }}
+            placeholder={["开始日期", "结束日期"]}
+          />
+        </Form.Item>
+        <Form.Item>
+          <Button
+            type="primary"
+            onClick={() => {
+              getDepartmentData();
+            }}
+            style={{ marginRight: 8 }}
+          >
+            搜索
+          </Button>
+          <Button onClick={handleReset}>
+            重置
+          </Button>
+        </Form.Item>
+      </Form>
+
+      {/* 数据表格 */}
+      <TableComponent<DepartmentData>
+        data={processedData}
+        toolbarRender={() => (
+          <div className={styles.tableHeader}>
+            <Button 
+              type="primary" 
+              icon={<PlusOutlined />}
+              onClick={() => setIsAddModalVisible(true)}
+            >
+              新增
+            </Button>
+            <Button onClick={handleExpandAll}>
+              {expandedRowKeys.length > 0 ? '折叠' : '展开'}
+            </Button>
+          </div>
+        )}
+        pagination={undefined} // 树形表格通常不分页
+        expandable={{
+          expandedRowKeys,
+          onExpand: handleExpand,
+          indentSize: 20,
+        }}
+      >
+        <Column 
+          title="部门名称" 
+          dataIndex="deptName" 
+          key="deptName"
+          width={300}
+        />
+        <Column 
+          title="排序" 
+          dataIndex="orderNum" 
+          key="orderNum" 
+          width={80}
+        />
+        <Column
+          title="状态"
+          key="status"
+          width={100}
+          render={(_, record: DepartmentData) => (
+            <Switch
+              checked={record.status}
+              onChange={(checked) => handleStatusChange(record.id, checked)}
+              checkedChildren="正常"
+              unCheckedChildren="停用"
+            />
+          )}
+        />
+        <Column 
+          title="创建时间" 
+          dataIndex="createTime" 
+          key="createTime" 
+          width={180}
+        />
+        <Column
+          title="操作"
+          key="action"
+          width={180}
+          render={(_, record: DepartmentData) => (
+            <Space>
+              <Button 
+                type="link" 
+                size="small"
+                onClick={() => handleEdit(record)}
+              >
+                修改
+              </Button>
+              <Button 
+                type="link" 
+                size="small"
+                onClick={() => {
+                  setNewDept({ ...newDept, parentId: record.id });
+                  setIsAddModalVisible(true);
+                }}
+              >
+                新增
+              </Button>
+              <Button 
+                type="link" 
+                danger 
+                size="small"
+                onClick={() => handleDelete(record)}
+              >
+                删除
+              </Button>
+            </Space>
+          )}
+        />
+      </TableComponent>
+
+      {/* 新增部门模态框 */}
+      <Modal
+        title="添加部门"
+        open={isAddModalVisible}
+        onCancel={() => setIsAddModalVisible(false)}
+        onOk={handleAdd}
+        width={600}
+      >
+        <Form layout="vertical">
+          <Form.Item label="上级部门">
+            <TreeSelect
+              value={newDept.parentId === 0 ? undefined : newDept.parentId}
+              onChange={(value) => setNewDept({ ...newDept, parentId: value || 0 })}
+              treeData={[
+                { value: 0, title: "主类目" },
+                ...buildTreeSelectData(departmentData)
+              ]}
+              placeholder="选择上级部门"
+              allowClear
+            />
+          </Form.Item>
+          <Form.Item label="部门名称" required>
+            <Input
+              placeholder="请输入部门名称"
+              value={newDept.deptName}
+              onChange={(e) => setNewDept({ ...newDept, deptName: e.target.value })}
+            />
+          </Form.Item>
+          <Form.Item label="显示排序">
+            <Input
+              type="number"
+              placeholder="请输入显示排序"
+              value={newDept.orderNum}
+              onChange={(e) => setNewDept({ ...newDept, orderNum: Number(e.target.value) })}
+            />
+          </Form.Item>
+          <Form.Item label="负责人">
+            <Input
+              placeholder="请输入负责人"
+              value={newDept.leader}
+              onChange={(e) => setNewDept({ ...newDept, leader: e.target.value })}
+            />
+          </Form.Item>
+          <Form.Item label="联系电话">
+            <Input
+              placeholder="请输入联系电话"
+              value={newDept.phone}
+              onChange={(e) => setNewDept({ ...newDept, phone: e.target.value })}
+            />
+          </Form.Item>
+          <Form.Item label="邮箱">
+            <Input
+              placeholder="请输入邮箱"
+              value={newDept.email}
+              onChange={(e) => setNewDept({ ...newDept, email: e.target.value })}
+            />
+          </Form.Item>
+          <Form.Item label="部门状态">
+            <Select
+              value={newDept.status}
+              onChange={(value) => setNewDept({ ...newDept, status: value })}
+              options={[
+                { label: "正常", value: true },
+                { label: "停用", value: false },
+              ]}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* 编辑部门模态框 */}
+      <Modal
+        title="修改部门"
+        open={isEditModalVisible}
+        onCancel={() => setIsEditModalVisible(false)}
+        onOk={handleEditSave}
+        width={600}
+      >
+        {currentDept && (
+          <Form layout="vertical">
+            <Form.Item label="上级部门">
+              <TreeSelect
+                value={currentDept.parentId === 0 ? undefined : currentDept.parentId}
+                onChange={(value) => setCurrentDept({ ...currentDept, parentId: value || 0 })}
+                treeData={[
+                  { value: 0, title: "主类目" },
+                  ...buildTreeSelectData(departmentData)
+                ]}
+                placeholder="选择上级部门"
+                allowClear
+              />
+            </Form.Item>
+            <Form.Item label="部门名称" required>
+              <Input
+                placeholder="请输入部门名称"
+                value={currentDept.deptName}
+                onChange={(e) =>
+                  setCurrentDept({ ...currentDept, deptName: e.target.value })
+                }
+              />
+            </Form.Item>
+            <Form.Item label="显示排序">
+              <Input
+                type="number"
+                placeholder="请输入显示排序"
+                value={currentDept.orderNum}
+                onChange={(e) =>
+                  setCurrentDept({ ...currentDept, orderNum: Number(e.target.value) })
+                }
+              />
+            </Form.Item>
+            <Form.Item label="负责人">
+              <Input
+                placeholder="请输入负责人"
+                value={currentDept.leader}
+                onChange={(e) =>
+                  setCurrentDept({ ...currentDept, leader: e.target.value })
+                }
+              />
+            </Form.Item>
+            <Form.Item label="联系电话">
+              <Input
+                placeholder="请输入联系电话"
+                value={currentDept.phone}
+                onChange={(e) =>
+                  setCurrentDept({ ...currentDept, phone: e.target.value })
+                }
+              />
+            </Form.Item>
+            <Form.Item label="邮箱">
+              <Input
+                placeholder="请输入邮箱"
+                value={currentDept.email}
+                onChange={(e) =>
+                  setCurrentDept({ ...currentDept, email: e.target.value })
+                }
+              />
+            </Form.Item>
+            <Form.Item label="部门状态">
+              <Select
+                value={currentDept.status}
+                onChange={(value) =>
+                  setCurrentDept({ ...currentDept, status: value })
+                }
+                options={[
+                  { label: "正常", value: true },
+                  { label: "停用", value: false },
+                ]}
+              />
+            </Form.Item>
+          </Form>
+        )}
+      </Modal>
+
+      {/* 删除确认框 */}
+      <Modal
+        title="确认删除"
+        open={isDeleteModalVisible}
+        onCancel={() => setIsDeleteModalVisible(false)}
+        onOk={confirmDelete}
+      >
+        <p>确定要删除部门 "{currentDept?.deptName}" 吗？</p>
+      </Modal>
+    </div>
+  );
+};
+
+export default DepartmentManagement;

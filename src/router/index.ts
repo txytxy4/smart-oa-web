@@ -1,19 +1,31 @@
 import { createBrowserRouter } from 'react-router-dom';
 import Home from '../pages/Home';
 import About from '../pages/About';
-import Layout from '../layout';
 import Goods from '../pages/goods';
 import Login from '@/pages/Login/login';
 import Unknow from '@/pages/404/index';
 import User from '@/pages/User/index';
 import UserList from '@/pages/User/List/index';
 import RoleManagement from '@/pages/role/index';
+import DepartmentManagement from '@/pages/department/index';
+import PositionManagement from '@/pages/position/index';
+import ProtectedLayout from '@/components/ProtectedLayout';
+import RedirectToHome from '@/components/RedirectToHome';
+import RedirectToIndexHome from '@/components/RedirectToIndexHome';
 
 const router = createBrowserRouter([
     {
+        path: '/',
+        Component: RedirectToHome, // 根路径重定向
+    },
+    {
         path: '/index',
-        Component: Layout, // 父路由
+        Component: ProtectedLayout,
         children: [
+            {
+                index: true, // 默认路由
+                Component: RedirectToIndexHome
+            },
             {
                 path: 'home',
                 Component: Home, // 子路由
@@ -37,10 +49,17 @@ const router = createBrowserRouter([
             {
                 path: 'role',
                 Component: RoleManagement,
+            },
+            {
+                path: 'department',
+                Component: DepartmentManagement,
+            },
+            {
+                path: 'position',
+                Component: PositionManagement,
             }
         ]
     },
-
     {
         path: '/login',
         Component: Login

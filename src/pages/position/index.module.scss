@@ -1,4 +1,4 @@
-.roleManagement {
+.positionManagement {
   // padding: 20px;
   background: #fff;
   border-radius: 6px;
@@ -39,7 +39,7 @@
 
 // 响应式设计
 @media (max-width: 1200px) {
-  .roleManagement {
+  .positionManagement {
     .searchForm {
       .ant-form-item {
         margin-bottom: 12px;
@@ -49,7 +49,7 @@
 }
 
 @media (max-width: 768px) {
-  .roleManagement {
+  .positionManagement {
     padding: 12px;
 
     .searchForm {

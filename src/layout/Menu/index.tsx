@@ -1,5 +1,5 @@
 import { Menu as AntdMenu } from 'antd';
-import { DesktopOutlined, UsergroupDeleteOutlined, SettingOutlined, BankOutlined, InsertRowAboveOutlined } from '@ant-design/icons';
+import { DesktopOutlined, UsergroupDeleteOutlined, SettingOutlined, BankOutlined, InsertRowAboveOutlined, ApartmentOutlined, IdcardOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd'
 import { useNavigate } from 'react-router';
 import logo from '@/assets/logo.png';
@@ -29,6 +29,16 @@ export default function Menu() {
                     key: '/index/role',
                     label: '角色管理',
                     icon: <UsergroupDeleteOutlined />,
+                },
+                {
+                    key: '/index/department',
+                    label: '部门管理',
+                    icon: <ApartmentOutlined />,
+                },
+                {
+                    key: '/index/position',
+                    label: '岗位管理',
+                    icon: <IdcardOutlined />,
                 }
             ]
         },

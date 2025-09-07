@@ -1,5 +1,5 @@
 import { Table, Space } from "antd";
-import type { TablePaginationConfig } from "antd";
+import type { TablePaginationConfig, ExpandableConfig } from "antd";
 import type { TableRowSelection } from "antd/es/table/interface";
 import React, { useState } from "react";
 
@@ -11,6 +11,7 @@ interface TableProps<T = unknown> {
     showCheckbox?: boolean;
     onSelectChange?: (selectedRowKeys: React.Key[], selectedRows: T[]) => void;
     toolbarRender?: (selectedRowKeys: React.Key[], selectedRows: T[]) => React.ReactNode;
+    expandable?: ExpandableConfig<T>;
 }
 
 const TableComponent = <T extends object>(props: TableProps<T>) => {
@@ -21,7 +22,8 @@ const TableComponent = <T extends object>(props: TableProps<T>) => {
         children, 
         showCheckbox = true, 
         onSelectChange, 
-        toolbarRender
+        toolbarRender,
+        expandable
     } = props;
     
     const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
@@ -45,6 +47,7 @@ const TableComponent = <T extends object>(props: TableProps<T>) => {
                 dataSource={data} 
                 pagination={pagination}
                 rowSelection={rowSelection}
+                expandable={expandable}
                 rowKey={(record) => {
                     // 使用类型安全的方式检查id属性
                     const recordWithId = record as { id?: string | number };

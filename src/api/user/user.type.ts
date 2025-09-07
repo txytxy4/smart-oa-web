@@ -75,6 +75,12 @@ export interface UserListResponse {
 
 // 更新用户信息请求参数
 export interface UpdateUserRequest {
+    id?: number;
+    username?: string;
+    nickname?: string;
+    address?: string;
+    role?: string;
+    avatarUrl?: string;
     email?: string;
     phone?: string;
     avatar?: string;

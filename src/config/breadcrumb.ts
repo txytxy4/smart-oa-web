@@ -38,6 +38,24 @@ export const routeConfig: Record<string, RouteConfig> = {
     ],
     parentPath: '/index'
   },
+  '/index/department': {
+    path: '/index/department',
+    title: '部门管理',
+    breadcrumbs: [
+      { title: '系统管理' },
+      { title: '部门管理', path: '/index/department' }
+    ],
+    parentPath: '/index'
+  },
+  '/index/position': {
+    path: '/index/position',
+    title: '岗位管理',
+    breadcrumbs: [
+      { title: '系统管理' },
+      { title: '岗位管理', path: '/index/position' }
+    ],
+    parentPath: '/index'
+  },
   '/index/about': {
     path: '/index/about',
     title: '关于',

@@ -7,6 +7,7 @@ import { getUserInfo } from '@/api/user/user';
 import type { UserInfo } from '@/api/user/user.type';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getBreadcrumbByPath } from '@/config/breadcrumb';
+import { useTabStore } from '@/store/tabs';
 
 
 interface HeaderProps {
@@ -19,6 +20,7 @@ const Header = ({ collapsed, onCollapse }: HeaderProps) => {
     const [dialog, setDialog] = useState<boolean>(false);
     const navigate = useNavigate();
     const location = useLocation();
+    const { clearTabs } = useTabStore();
     useEffect(() => {
       const fetchUserInfo = async () => {
         try {
@@ -43,15 +45,29 @@ const Header = ({ collapsed, onCollapse }: HeaderProps) => {
       navigate("/index/user");
     }
 
+    // 退出登录
+    const handleLogout = () => {
+      // 清除登录信息
+      localStorage.removeItem('token');
+      localStorage.removeItem('userId');
+      // 清除标签
+      clearTabs();
+      // 跳转到登录页
+      navigate('/login');
+    }
+
 
     // 弹出菜单内容
     const content = (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '100px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '120px' }}>
         <Button type="text" onClick={() => setDialog(true)} style={{ textAlign: 'left' }}>
           个人信息
         </Button>
         <Button type="text" onClick={() => toUser()} style={{ textAlign: 'left' }}>
           个人主页
+        </Button>
+        <Button type="text" onClick={handleLogout} style={{ textAlign: 'left', color: '#ff4d4f' }}>
+          退出登录
         </Button>
       </div>
     )
