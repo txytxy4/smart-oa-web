@@ -1,0 +1,78 @@
+.parameterManagement {
+  // padding: 20px;
+  background: #fff;
+  border-radius: 6px;
+
+  .searchForm {
+    // margin-bottom: 20px;
+    padding: 20px;
+    background: #fafafa;
+    border-radius: 6px;
+
+    .ant-form-item {
+      margin-bottom: 16px;
+    }
+  }
+
+  .tableHeader {
+    width: 100%;
+    text-align: left;
+    // margin: 20px 0;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+
+    .ant-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+  }
+}
+
+// 标签样式
+.ant-tag {
+  &.ant-tag-blue {
+    background-color: #e6f7ff;
+    border-color: #91d5ff;
+    color: #1890ff;
+  }
+
+  &.ant-tag-green {
+    background-color: #f6ffed;
+    border-color: #b7eb8f;
+    color: #52c41a;
+  }
+
+  &.ant-tag-red {
+    background-color: #fff2f0;
+    border-color: #ffccc7;
+    color: #ff4d4f;
+  }
+}
+
+// 响应式设计
+@media (max-width: 1200px) {
+  .parameterManagement {
+    .searchForm {
+      .ant-form-item {
+        margin-bottom: 12px;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .parameterManagement {
+    padding: 12px;
+
+    .searchForm {
+      padding: 12px;
+    }
+
+    .tableHeader {
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+  }
+}

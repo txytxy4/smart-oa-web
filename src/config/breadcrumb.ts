@@ -76,6 +76,51 @@ export const routeConfig: Record<string, RouteConfig> = {
     breadcrumbs: [
       { title: '个人主页', path: '/index/user' }
     ]
+  },
+  '/index/parameter': {
+    path: '/index/parameter',
+    title: '参数设置',
+    breadcrumbs: [
+      { title: '系统管理' },
+      { title: '参数设置', path: '/index/parameter' }
+    ],
+    parentPath: '/index'
+  },
+  '/index/announcement': {
+    path: '/index/announcement',
+    title: '公告管理',
+    breadcrumbs: [
+      { title: '系统管理' },
+      { title: '公告管理', path: '/index/announcement' }
+    ],
+    parentPath: '/index'
+  },
+  '/index/tool/build': {
+    path: '/index/tool/build',
+    title: '表单构建',
+    breadcrumbs: [
+      { title: '系统工具' },
+      { title: '表单构建', path: '/index/tool/build' }
+    ],
+    parentPath: '/index'
+  },
+  '/index/monitor/online': {
+    path: '/index/monitor/online',
+    title: '在线用户',
+    breadcrumbs: [
+      { title: '系统监控' },
+      { title: '在线用户', path: '/index/monitor/online' }
+    ],
+    parentPath: '/index'
+  },
+  '/index/monitor/job': {
+    path: '/index/monitor/job',
+    title: '定时任务',
+    breadcrumbs: [
+      { title: '系统监控' },
+      { title: '定时任务', path: '/index/monitor/job' }
+    ],
+    parentPath: '/index'
   }
 };
 

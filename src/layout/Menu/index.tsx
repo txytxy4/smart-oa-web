@@ -1,5 +1,5 @@
 import { Menu as AntdMenu } from 'antd';
-import { DesktopOutlined, UsergroupDeleteOutlined, SettingOutlined, BankOutlined, InsertRowAboveOutlined, ApartmentOutlined, IdcardOutlined } from '@ant-design/icons';
+import { DesktopOutlined, UsergroupDeleteOutlined, SettingOutlined, BankOutlined, InsertRowAboveOutlined, ApartmentOutlined, IdcardOutlined, ToolOutlined, SoundOutlined, BuildOutlined, UserOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd'
 import { useNavigate } from 'react-router';
 import logo from '@/assets/logo.png';
@@ -39,6 +39,16 @@ export default function Menu() {
                     key: '/index/position',
                     label: '岗位管理',
                     icon: <IdcardOutlined />,
+                },
+                {
+                    key: '/index/parameter',
+                    label: '参数设置',
+                    icon: <ToolOutlined />,
+                },
+                {
+                    key: '/index/announcement',
+                    label: '公告管理',
+                    icon: <SoundOutlined />,
                 }
             ]
         },
@@ -48,9 +58,14 @@ export default function Menu() {
             icon: <DesktopOutlined />,
             children: [
                 {
-                    key: '/index/userList',
-                    label: '用户管理',
-                    icon: <UsergroupDeleteOutlined />,
+                    key: '/index/monitor/online',
+                    label: '在线用户',
+                    icon: <UserOutlined />,
+                },
+                {
+                    key: '/index/monitor/job',
+                    label: '定时任务',
+                    icon: <ClockCircleOutlined />,
                 }
             ]
         },
@@ -60,9 +75,9 @@ export default function Menu() {
             icon: <InsertRowAboveOutlined />,
             children: [
                 {
-                    key: '/index/userList',
-                    label: '用户管理',
-                    icon: <UsergroupDeleteOutlined />,
+                    key: '/index/tool/build',
+                    label: '表单构建',
+                    icon: <BuildOutlined />,
                 }
             ]
         }

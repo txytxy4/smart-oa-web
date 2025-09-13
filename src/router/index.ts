@@ -9,6 +9,11 @@ import UserList from '@/pages/User/List/index';
 import RoleManagement from '@/pages/role/index';
 import DepartmentManagement from '@/pages/department/index';
 import PositionManagement from '@/pages/position/index';
+import ParameterManagement from '@/pages/parameter/index';
+import AnnouncementManagement from '@/pages/announcement/index';
+import Build from '@/pages/tool/build/index';
+import OnlineUserManagement from '@/pages/monitor/online/index';
+import JobManagement from '@/pages/monitor/job/index';
 import ProtectedLayout from '@/components/ProtectedLayout';
 import RedirectToHome from '@/components/RedirectToHome';
 import RedirectToIndexHome from '@/components/RedirectToIndexHome';
@@ -57,6 +62,26 @@ const router = createBrowserRouter([
             {
                 path: 'position',
                 Component: PositionManagement,
+            },
+            {
+                path: 'parameter',
+                Component: ParameterManagement,
+            },
+            {
+                path: 'announcement',
+                Component: AnnouncementManagement,
+            },
+            {
+                path: 'tool/build',
+                Component: Build,
+            },
+            {
+                path: 'monitor/online',
+                Component: OnlineUserManagement,
+            },
+            {
+                path: 'monitor/job',
+                Component: JobManagement,
             }
         ]
     },

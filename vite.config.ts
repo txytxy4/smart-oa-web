@@ -11,5 +11,19 @@ export default defineConfig({
     alias: {
       '@': '/src'
     }
+  },
+  optimizeDeps: {
+    include: ['antd']
+  },
+  build: {
+    rollupOptions: {
+      external: (id) => {
+        // 将有问题的样式文件标记为外部依赖
+        if (id.includes('antd/es/time-picker/style')) {
+          return true;
+        }
+        return false;
+      }
+    }
   }
 })
