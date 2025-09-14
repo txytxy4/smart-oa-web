@@ -1,5 +1,5 @@
 import { Menu as AntdMenu } from 'antd';
-import { DesktopOutlined, UsergroupDeleteOutlined, SettingOutlined, BankOutlined, InsertRowAboveOutlined, ApartmentOutlined, IdcardOutlined, ToolOutlined, SoundOutlined, BuildOutlined, UserOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { DesktopOutlined, UsergroupDeleteOutlined, SettingOutlined, BankOutlined, InsertRowAboveOutlined, ApartmentOutlined, IdcardOutlined, ToolOutlined, SoundOutlined, BuildOutlined, UserOutlined, ClockCircleOutlined, DatabaseOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd'
 import { useNavigate } from 'react-router';
 import logo from '@/assets/logo.png';
@@ -66,6 +66,11 @@ export default function Menu() {
                     key: '/index/monitor/job',
                     label: '定时任务',
                     icon: <ClockCircleOutlined />,
+                },
+                {
+                    key: '/index/monitor/cache',
+                    label: '缓存监控',
+                    icon: <DatabaseOutlined />,
                 }
             ]
         },

@@ -13,16 +13,16 @@ export default defineConfig({
     }
   },
   optimizeDeps: {
-    include: ['antd']
+    include: ['antd', 'form-render', 'fr-generator']
   },
-  build: {
-    rollupOptions: {
-      external: (id) => {
-        // 将有问题的样式文件标记为外部依赖
-        if (id.includes('antd/es/time-picker/style')) {
-          return true;
+  css: {
+    preprocessorOptions: {
+      less: {
+        javascriptEnabled: true,
+        modifyVars: {
+          // 可以在这里自定义 Antd 主题变量
+          '@primary-color': '#1890ff',
         }
-        return false;
       }
     }
   }

@@ -20,43 +20,35 @@
     }
   }
 
-  .componentPanel,
-  .designArea,
-  .propertyPanel {
-    height: 100%;
-    
-    .ant-card-body {
-      height: calc(100% - 57px);
-      overflow-y: auto;
-    }
-  }
-
-  .fieldItem {
+  .generatorContainer {
+    height: calc(100vh - 200px);
+    min-height: 600px;
     border: 1px solid #e8e8e8;
-    border-radius: 4px;
-    margin-bottom: 8px;
-    padding: 8px 12px;
-    background: #fafafa;
-    cursor: pointer;
+    border-radius: 6px;
+    overflow: hidden;
 
-    &:hover {
-      background: #f0f0f0;
-      border-color: #1890ff;
-    }
+    // fr-generator 样式覆盖
+    :global {
+      .fr-generator {
+        height: 100%;
+        
+        .fr-generator-container {
+          height: 100%;
+        }
 
-    .fieldContent {
-      display: flex;
-      align-items: center;
-      width: 100%;
+        .fr-generator-sidebar {
+          background: #fafafa;
+          border-right: 1px solid #e8e8e8;
+        }
 
-      .dragHandle {
-        margin-right: 8px;
-        color: #999;
-        cursor: move;
-      }
+        .fr-generator-main {
+          background: #fff;
+        }
 
-      .fieldInfo {
-        flex: 1;
+        .fr-generator-preview {
+          background: #f8f9fa;
+          border-left: 1px solid #e8e8e8;
+        }
       }
     }
   }

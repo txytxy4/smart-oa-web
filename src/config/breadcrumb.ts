@@ -121,6 +121,15 @@ export const routeConfig: Record<string, RouteConfig> = {
       { title: '定时任务', path: '/index/monitor/job' }
     ],
     parentPath: '/index'
+  },
+  '/index/monitor/cache': {
+    path: '/index/monitor/cache',
+    title: '缓存监控',
+    breadcrumbs: [
+      { title: '系统监控' },
+      { title: '缓存监控', path: '/index/monitor/cache' }
+    ],
+    parentPath: '/index'
   }
 };
 

@@ -14,6 +14,7 @@ import AnnouncementManagement from '@/pages/announcement/index';
 import Build from '@/pages/tool/build/index';
 import OnlineUserManagement from '@/pages/monitor/online/index';
 import JobManagement from '@/pages/monitor/job/index';
+import CacheManagement from '@/pages/monitor/cache/index';
 import ProtectedLayout from '@/components/ProtectedLayout';
 import RedirectToHome from '@/components/RedirectToHome';
 import RedirectToIndexHome from '@/components/RedirectToIndexHome';
@@ -82,6 +83,10 @@ const router = createBrowserRouter([
             {
                 path: 'monitor/job',
                 Component: JobManagement,
+            },
+            {
+                path: 'monitor/cache',
+                Component: CacheManagement,
             }
         ]
     },
