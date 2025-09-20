@@ -130,6 +130,44 @@ export const routeConfig: Record<string, RouteConfig> = {
       { title: '缓存监控', path: '/index/monitor/cache' }
     ],
     parentPath: '/index'
+  },
+  '/index/menu': {
+    path: '/index/menu',
+    title: '菜单管理',
+    breadcrumbs: [
+      { title: '系统管理' },
+      { title: '菜单管理', path: '/index/menu' }
+    ],
+    parentPath: '/index'
+  },
+  '/index/dict': {
+    path: '/index/dict',
+    title: '字典管理',
+    breadcrumbs: [
+      { title: '系统管理' },
+      { title: '字典管理', path: '/index/dict' }
+    ],
+    parentPath: '/index'
+  },
+  '/index/log/operlog': {
+    path: '/index/log/operlog',
+    title: '操作日志',
+    breadcrumbs: [
+      { title: '系统管理' },
+      { title: '日志管理' },
+      { title: '操作日志', path: '/index/log/operlog' }
+    ],
+    parentPath: '/index'
+  },
+  '/index/log/logininfor': {
+    path: '/index/log/logininfor',
+    title: '登录日志',
+    breadcrumbs: [
+      { title: '系统管理' },
+      { title: '日志管理' },
+      { title: '登录日志', path: '/index/log/logininfor' }
+    ],
+    parentPath: '/index'
   }
 };
 

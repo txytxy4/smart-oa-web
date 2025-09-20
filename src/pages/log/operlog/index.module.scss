@@ -1,0 +1,442 @@
+.operLogManagement {
+  padding: 0;
+  background: transparent;
+
+  .searchCard,
+  .toolbarCard,
+  .listCard {
+    margin-bottom: 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+    .ant-card-body {
+      padding: 20px;
+    }
+  }
+
+  .searchForm {
+    .ant-form-item {
+      margin-bottom: 16px;
+    }
+
+    .ant-form-item-label {
+      font-weight: 500;
+    }
+
+    .ant-input,
+    .ant-select-selector,
+    .ant-picker {
+      border-radius: 6px;
+      border: 1px solid #d9d9d9;
+      transition: all 0.3s;
+
+      &:hover {
+        border-color: #40a9ff;
+      }
+
+      &:focus,
+      &.ant-select-focused .ant-select-selector,
+      &.ant-picker-focused {
+        border-color: #1890ff;
+        box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+      }
+    }
+  }
+
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .toolbarLeft {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      .recordCount {
+        font-size: 14px;
+      }
+    }
+
+    .ant-btn {
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+
+      .anticon {
+        font-size: 14px;
+      }
+    }
+  }
+
+  .listCard {
+    .ant-card-body {
+      padding: 0;
+    }
+  }
+
+  .virtualList {
+    border-radius: 0 0 8px 8px;
+  }
+
+  // 日志项样式
+  .logItem {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: #fafafa;
+    }
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .logHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+
+      .logTitle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+
+        .businessTag,
+        .statusTag {
+          font-size: 11px;
+          padding: 2px 6px;
+          border-radius: 4px;
+          font-weight: 500;
+        }
+      }
+
+      .logActions {
+        display: flex;
+        gap: 4px;
+
+        .ant-btn-link {
+          padding: 0 4px;
+          height: auto;
+          font-size: 12px;
+          display: inline-flex;
+          align-items: center;
+          gap: 2px;
+
+          .anticon {
+            font-size: 12px;
+          }
+        }
+      }
+    }
+
+    .logContent {
+      .logInfo,
+      .logMeta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 8px;
+
+        .logField {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 13px;
+
+          .ant-typography {
+            font-size: 13px;
+          }
+
+          .ant-tag {
+            font-size: 11px;
+            padding: 1px 4px;
+            margin: 0;
+          }
+        }
+      }
+
+      .logMeta {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  // 详情模态框样式
+  .logDetail {
+    .detailSection {
+      margin-bottom: 24px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      h4 {
+        margin-bottom: 16px;
+        color: #262626;
+        font-weight: 600;
+        font-size: 16px;
+      }
+
+      .detailGrid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 12px 24px;
+      }
+
+      .detailItem {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+
+        .ant-typography:first-child {
+          min-width: 80px;
+          color: #666;
+          flex-shrink: 0;
+        }
+
+        .ant-typography:last-child,
+        .ant-tag {
+          flex: 1;
+          word-break: break-all;
+        }
+      }
+
+      .jsonContent {
+        background: #f5f5f5;
+        border: 1px solid #e8e8e8;
+        border-radius: 4px;
+        padding: 12px;
+        margin-top: 4px;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        line-height: 1.5;
+        color: #333;
+        white-space: pre-wrap;
+        word-break: break-all;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+    }
+  }
+
+  // 标签颜色自定义
+  .ant-tag {
+    border-radius: 4px;
+    font-weight: 500;
+    
+    &.ant-tag-success {
+      background: #f6ffed;
+      border-color: #b7eb8f;
+      color: #52c41a;
+    }
+
+    &.ant-tag-error {
+      background: #fff2f0;
+      border-color: #ffccc7;
+      color: #ff4d4f;
+    }
+
+    &.ant-tag-blue {
+      background: #e6f7ff;
+      border-color: #91d5ff;
+      color: #1890ff;
+    }
+
+    &.ant-tag-green {
+      background: #f6ffed;
+      border-color: #b7eb8f;
+      color: #52c41a;
+    }
+
+    &.ant-tag-red {
+      background: #fff2f0;
+      border-color: #ffccc7;
+      color: #ff4d4f;
+    }
+
+    &.ant-tag-purple {
+      background: #f9f0ff;
+      border-color: #d3adf7;
+      color: #722ed1;
+    }
+
+    &.ant-tag-orange {
+      background: #fff7e6;
+      border-color: #ffd591;
+      color: #fa8c16;
+    }
+
+    &.ant-tag-cyan {
+      background: #e6fffb;
+      border-color: #87e8de;
+      color: #13c2c2;
+    }
+
+    &.ant-tag-magenta {
+      background: #fff0f6;
+      border-color: #ffadd2;
+      color: #eb2f96;
+    }
+
+    &.ant-tag-lime {
+      background: #fcffe6;
+      border-color: #eaff8f;
+      color: #a0d911;
+    }
+
+    &.ant-tag-volcano {
+      background: #fff2e8;
+      border-color: #ffbb96;
+      color: #fa541c;
+    }
+  }
+
+  // 响应式设计
+  @media (max-width: 1200px) {
+    .searchForm {
+      .ant-form-item {
+        margin-bottom: 12px;
+      }
+    }
+
+    .logItem {
+      .logHeader {
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+
+        .logActions {
+          align-self: flex-end;
+        }
+      }
+
+      .logContent {
+        .logInfo,
+        .logMeta {
+          gap: 12px;
+
+          .logField {
+            min-width: 0;
+            flex: 1;
+          }
+        }
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    .searchCard,
+    .toolbarCard,
+    .listCard {
+      margin-bottom: 12px;
+
+      .ant-card-body {
+        padding: 16px;
+      }
+    }
+
+    .toolbar {
+      flex-direction: column;
+      gap: 12px;
+      align-items: stretch;
+
+      .toolbarLeft {
+        justify-content: space-between;
+      }
+    }
+
+    .logItem {
+      padding: 12px 16px;
+
+      .logContent {
+        .logInfo,
+        .logMeta {
+          flex-direction: column;
+          gap: 8px;
+        }
+      }
+    }
+
+    .logDetail {
+      .detailSection {
+        .detailGrid {
+          grid-template-columns: 1fr;
+          gap: 12px;
+        }
+
+        .detailItem {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 4px;
+
+          .ant-typography:first-child {
+            min-width: auto;
+          }
+        }
+      }
+    }
+  }
+
+  @media (max-width: 576px) {
+    .searchForm {
+      .ant-form-item {
+        width: 100%;
+
+        .ant-input,
+        .ant-select,
+        .ant-picker {
+          width: 100%;
+        }
+      }
+    }
+
+    .logItem {
+      .logHeader {
+        .logTitle {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 4px;
+        }
+      }
+    }
+  }
+}
+
+// 虚拟列表全局样式优化
+.virtual-list {
+  .virtual-list-content {
+    background: #fff;
+  }
+
+  .virtual-list-item {
+    border-bottom: 1px solid #f0f0f0;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+}
+
+// 滚动条样式
+.virtual-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.virtual-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.virtual-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+  
+  &:hover {
+    background: #a8a8a8;
+  }
+}

@@ -15,6 +15,10 @@ import Build from '@/pages/tool/build/index';
 import OnlineUserManagement from '@/pages/monitor/online/index';
 import JobManagement from '@/pages/monitor/job/index';
 import CacheManagement from '@/pages/monitor/cache/index';
+import MenuManagement from '@/pages/menu/index';
+import DictManagement from '@/pages/dict/index';
+import OperLogManagement from '@/pages/log/operlog/index';
+import LoginInforManagement from '@/pages/log/logininfor/index';
 import ProtectedLayout from '@/components/ProtectedLayout';
 import RedirectToHome from '@/components/RedirectToHome';
 import RedirectToIndexHome from '@/components/RedirectToIndexHome';
@@ -87,6 +91,22 @@ const router = createBrowserRouter([
             {
                 path: 'monitor/cache',
                 Component: CacheManagement,
+            },
+            {
+                path: 'menu',
+                Component: MenuManagement,
+            },
+            {
+                path: 'dict',
+                Component: DictManagement,
+            },
+            {
+                path: 'log/operlog',
+                Component: OperLogManagement,
+            },
+            {
+                path: 'log/logininfor',
+                Component: LoginInforManagement,
             }
         ]
     },

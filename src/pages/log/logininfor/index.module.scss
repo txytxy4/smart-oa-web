@@ -1,0 +1,447 @@
+.loginInforManagement {
+  padding: 0;
+  background: transparent;
+
+  .searchCard,
+  .toolbarCard,
+  .listCard {
+    margin-bottom: 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+    .ant-card-body {
+      padding: 20px;
+    }
+  }
+
+  .searchForm {
+    .ant-form-item {
+      margin-bottom: 16px;
+    }
+
+    .ant-form-item-label {
+      font-weight: 500;
+    }
+
+    .ant-input,
+    .ant-select-selector,
+    .ant-picker {
+      border-radius: 6px;
+      border: 1px solid #d9d9d9;
+      transition: all 0.3s;
+
+      &:hover {
+        border-color: #40a9ff;
+      }
+
+      &:focus,
+      &.ant-select-focused .ant-select-selector,
+      &.ant-picker-focused {
+        border-color: #1890ff;
+        box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+      }
+    }
+  }
+
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .toolbarLeft {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      .recordCount {
+        font-size: 14px;
+      }
+    }
+
+    .ant-btn {
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+
+      .anticon {
+        font-size: 14px;
+      }
+    }
+  }
+
+  .listCard {
+    .ant-card-body {
+      padding: 0;
+    }
+  }
+
+  .virtualList {
+    border-radius: 0 0 8px 8px;
+  }
+
+  // 登录项样式
+  .loginItem {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: #fafafa;
+    }
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .loginHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+
+      .loginTitle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+
+        .statusTag {
+          font-size: 11px;
+          padding: 2px 6px;
+          border-radius: 4px;
+          font-weight: 500;
+        }
+
+        .visitId {
+          color: #999;
+          font-size: 12px;
+          font-family: 'Courier New', monospace;
+        }
+      }
+
+      .loginActions {
+        display: flex;
+        gap: 4px;
+
+        .ant-btn-link {
+          padding: 0 4px;
+          height: auto;
+          font-size: 12px;
+          display: inline-flex;
+          align-items: center;
+          gap: 2px;
+
+          .anticon {
+            font-size: 12px;
+          }
+        }
+      }
+    }
+
+    .loginContent {
+      .loginInfo,
+      .loginMeta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 8px;
+
+        .loginField {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 13px;
+
+          .ant-typography {
+            font-size: 13px;
+          }
+
+          .browserInfo,
+          .osInfo {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 13px;
+          }
+        }
+      }
+
+      .loginMeta {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  // 详情模态框样式
+  .loginDetail {
+    .detailSection {
+      margin-bottom: 24px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      h4 {
+        margin-bottom: 16px;
+        color: #262626;
+        font-weight: 600;
+        font-size: 16px;
+      }
+
+      .detailGrid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 12px 24px;
+      }
+
+      .detailItem {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+
+        .ant-typography:first-child {
+          min-width: 80px;
+          color: #666;
+          flex-shrink: 0;
+        }
+
+        .ant-typography:last-child,
+        .ant-tag {
+          flex: 1;
+          word-break: break-all;
+        }
+      }
+    }
+  }
+
+  // 标签颜色自定义
+  .ant-tag {
+    border-radius: 4px;
+    font-weight: 500;
+    
+    &.ant-tag-success {
+      background: #f6ffed;
+      border-color: #b7eb8f;
+      color: #52c41a;
+    }
+
+    &.ant-tag-error {
+      background: #fff2f0;
+      border-color: #ffccc7;
+      color: #ff4d4f;
+    }
+  }
+
+  // 浏览器和操作系统图标样式
+  .browserInfo,
+  .osInfo {
+    .emoji {
+      font-size: 14px;
+      margin-right: 4px;
+    }
+  }
+
+  // 响应式设计
+  @media (max-width: 1200px) {
+    .searchForm {
+      .ant-form-item {
+        margin-bottom: 12px;
+      }
+    }
+
+    .loginItem {
+      .loginHeader {
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+
+        .loginActions {
+          align-self: flex-end;
+        }
+      }
+
+      .loginContent {
+        .loginInfo,
+        .loginMeta {
+          gap: 12px;
+
+          .loginField {
+            min-width: 0;
+            flex: 1;
+          }
+        }
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    .searchCard,
+    .toolbarCard,
+    .listCard {
+      margin-bottom: 12px;
+
+      .ant-card-body {
+        padding: 16px;
+      }
+    }
+
+    .toolbar {
+      flex-direction: column;
+      gap: 12px;
+      align-items: stretch;
+
+      .toolbarLeft {
+        justify-content: space-between;
+      }
+    }
+
+    .loginItem {
+      padding: 12px 16px;
+
+      .loginContent {
+        .loginInfo,
+        .loginMeta {
+          flex-direction: column;
+          gap: 8px;
+        }
+      }
+    }
+
+    .loginDetail {
+      .detailSection {
+        .detailGrid {
+          grid-template-columns: 1fr;
+          gap: 12px;
+        }
+
+        .detailItem {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 4px;
+
+          .ant-typography:first-child {
+            min-width: auto;
+          }
+        }
+      }
+    }
+  }
+
+  @media (max-width: 576px) {
+    .searchForm {
+      .ant-form-item {
+        width: 100%;
+
+        .ant-input,
+        .ant-select,
+        .ant-picker {
+          width: 100%;
+        }
+      }
+    }
+
+    .loginItem {
+      .loginHeader {
+        .loginTitle {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 4px;
+        }
+      }
+    }
+  }
+}
+
+// 虚拟列表全局样式优化
+.virtual-list {
+  .virtual-list-content {
+    background: #fff;
+  }
+
+  .virtual-list-item {
+    border-bottom: 1px solid #f0f0f0;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+}
+
+// 滚动条样式
+.virtual-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.virtual-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.virtual-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+  
+  &:hover {
+    background: #a8a8a8;
+  }
+}
+
+// 登录状态特殊样式
+.loginItem {
+  &.failed {
+    border-left: 3px solid #ff4d4f;
+    background: #fff2f0;
+  }
+
+  &.success {
+    border-left: 3px solid #52c41a;
+  }
+}
+
+// 用户头像样式（如果需要的话）
+.userAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+// 地理位置样式
+.locationInfo {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  
+  &::before {
+    content: "📍";
+    font-size: 12px;
+  }
+}
+
+// IP地址样式
+.ipAddress {
+  font-family: 'Courier New', monospace;
+  background: #f5f5f5;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+  color: #666;
+}
+
+// 时间显示样式
+.timeDisplay {
+  color: #999;
+  font-size: 12px;
+  
+  &.recent {
+    color: #52c41a;
+    font-weight: 500;
+  }
+}

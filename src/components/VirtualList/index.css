@@ -1,0 +1,45 @@
+.virtual-list {
+  overflow-y: auto;
+  position: relative;
+  width: 100%;
+  /* 背景/边框可自定义 */
+}
+
+.virtual-list-content {
+  position: relative;
+  width: 100%;
+}
+
+.virtual-list-inner {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  will-change: transform;
+}
+
+.virtual-list-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+}
+
+/* 滚动条样式优化 */
+.virtual-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.virtual-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.virtual-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.virtual-list::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

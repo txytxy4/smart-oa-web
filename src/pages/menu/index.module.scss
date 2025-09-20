@@ -1,0 +1,282 @@
+.menuManagement {
+  background: #fff;
+  border-radius: 6px;
+
+  .searchForm {
+    padding: 20px;
+    background: #fafafa;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    border: 1px solid #f0f0f0;
+
+    .ant-form-item {
+      margin-bottom: 16px;
+    }
+
+    .ant-form-item-label {
+      font-weight: 500;
+    }
+
+    .ant-input,
+    .ant-select-selector,
+    .ant-picker {
+      border-radius: 4px;
+    }
+  }
+
+  .tableHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+
+    .ant-btn {
+      border-radius: 4px;
+    }
+
+    .ant-btn-primary {
+      background: #1890ff;
+      border-color: #1890ff;
+
+      &:hover {
+        background: #40a9ff;
+        border-color: #40a9ff;
+      }
+    }
+  }
+
+  // 表格样式
+  .ant-table {
+    .ant-table-thead > tr > th {
+      background: #fafafa;
+      font-weight: 600;
+      color: #262626;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .ant-table-tbody > tr > td {
+      border-bottom: 1px solid #f5f5f5;
+      padding: 12px 16px;
+    }
+
+    .ant-table-tbody > tr:hover > td {
+      background: #f5f7fa;
+    }
+
+    // 树形表格缩进样式
+    .ant-table-row-indent {
+      width: 20px;
+    }
+
+    .ant-table-row-expand-icon {
+      background: #fff;
+      border: 1px solid #d9d9d9;
+      border-radius: 2px;
+      width: 17px;
+      height: 17px;
+      
+      &:hover {
+        border-color: #1890ff;
+      }
+      
+      &-expanded {
+        background: #1890ff;
+        border-color: #1890ff;
+        
+        &::after {
+          color: #fff;
+        }
+      }
+    }
+  }
+
+  // 状态标签样式
+  .statusTag {
+    &.active {
+      background: #f6ffed;
+      border: 1px solid #b7eb8f;
+      color: #52c41a;
+    }
+
+    &.inactive {
+      background: #fff2f0;
+      border: 1px solid #ffccc7;
+      color: #ff4d4f;
+    }
+  }
+
+  // 菜单类型标签样式
+  .menuTypeTag {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+
+    &.directory {
+      background: #e6f7ff;
+      color: #1890ff;
+      border: 1px solid #91d5ff;
+    }
+
+    &.menu {
+      background: #f6ffed;
+      color: #52c41a;
+      border: 1px solid #b7eb8f;
+    }
+
+    &.button {
+      background: #fff7e6;
+      color: #fa8c16;
+      border: 1px solid #ffd591;
+    }
+  }
+
+  // 权限标识样式
+  .permissionCode {
+    font-family: 'Courier New', monospace;
+    background: #f5f5f5;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    color: #666;
+  }
+
+  // 组件路径样式
+  .componentPath {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: #666;
+    background: #f5f5f5;
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+
+  // 图标样式
+  .menuIcon {
+    font-size: 16px;
+    color: #666;
+    margin-right: 8px;
+  }
+
+  // 操作按钮样式
+  .actionButtons {
+    .ant-btn-link {
+      padding: 0;
+      height: auto;
+      font-size: 13px;
+      
+      &:not(:last-child) {
+        margin-right: 8px;
+      }
+
+      &.danger {
+        color: #ff4d4f;
+        
+        &:hover {
+          color: #ff7875;
+        }
+      }
+    }
+  }
+
+  // 模态框样式
+  .ant-modal {
+    .ant-modal-header {
+      border-bottom: 1px solid #f0f0f0;
+      padding: 16px 24px;
+    }
+
+    .ant-modal-body {
+      padding: 24px;
+    }
+
+    .ant-form-item-label {
+      font-weight: 500;
+    }
+
+    .ant-input,
+    .ant-select-selector,
+    .ant-input-number,
+    .ant-picker {
+      border-radius: 4px;
+    }
+
+    .ant-form-item-required {
+      &::before {
+        color: #ff4d4f;
+      }
+    }
+  }
+
+  // 开关样式
+  .ant-switch {
+    &.ant-switch-checked {
+      background-color: #52c41a;
+    }
+
+    .ant-switch-inner {
+      font-size: 11px;
+    }
+  }
+
+  // 树选择器样式
+  .ant-tree-select {
+    .ant-select-selector {
+      border-radius: 4px;
+    }
+
+    .ant-tree-select-dropdown {
+      border-radius: 4px;
+    }
+  }
+
+  // 响应式设计
+  @media (max-width: 768px) {
+    .searchForm {
+      .ant-form-item {
+        margin-bottom: 12px;
+      }
+    }
+
+    .tableHeader {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    }
+
+    .ant-table {
+      font-size: 13px;
+      
+      .ant-table-tbody > tr > td {
+        padding: 8px 12px;
+      }
+    }
+  }
+}
+
+// 全局样式覆盖
+.ant-table-expanded-row-fixed {
+  margin: 0 !important;
+}
+
+// 树形表格展开图标样式优化
+.ant-table-row-expand-icon {
+  position: relative;
+  
+  &::after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 10px;
+    line-height: 1;
+  }
+  
+  &-collapsed::after {
+    content: '+';
+  }
+  
+  &-expanded::after {
+    content: '-';
+  }
+}
