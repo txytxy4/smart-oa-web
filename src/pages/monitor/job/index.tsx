@@ -10,6 +10,7 @@ import {
   Modal,
   Switch,
   Tag,
+  DatePicker,
 } from "antd";
 import {
   EditOutlined,
@@ -19,6 +20,7 @@ import {
   ExportOutlined,
 } from "@ant-design/icons";
 import TableComponent from "@/components/Table";
+import { exportToExcel } from "@/hooks/exportToExcel";
 import styles from "./index.module.scss";
 
 // 定时任务数据接口
@@ -38,6 +40,7 @@ interface SearchParams {
   jobName?: string;
   jobGroup?: string;
   status?: string;
+  createTime?: [string, string] | null;
 }
 
 // 分页数据接口
@@ -87,10 +90,13 @@ const mockJobData: JobData[] = [
 const JobManagement = () => {
   // 任务数据
   const [jobData, setJobData] = useState<JobData[]>([]);
+  const [allJobData, setAllJobData] = useState<JobData[]>([]); // 存储所有数据
+  const [filteredData, setFilteredData] = useState<JobData[]>([]);
   const [searchParams, setSearchParams] = useState<SearchParams>({
     jobName: "",
     jobGroup: "",
     status: "",
+    createTime: null,
   });
   const [pageData, setPageData] = useState<PageData>({
     page: 1,
@@ -115,6 +121,58 @@ const JobManagement = () => {
     remark: "",
   });
 
+  // 过滤数据的通用函数
+  const applyFilter = useCallback((data: JobData[]) => {
+    let filtered = [...data];
+
+    // 任务名称过滤
+    if (searchParams.jobName) {
+      filtered = filtered.filter(item => 
+        item.jobName.toLowerCase().includes(searchParams.jobName!.toLowerCase())
+      );
+    }
+
+    // 任务组名过滤
+    if (searchParams.jobGroup) {
+      filtered = filtered.filter(item => item.jobGroup === searchParams.jobGroup);
+    }
+
+    // 状态过滤
+    if (searchParams.status) {
+      const status = searchParams.status === "true";
+      filtered = filtered.filter(item => item.status === status);
+    }
+
+    // 创建时间过滤
+    if (searchParams.createTime && searchParams.createTime.length === 2) {
+      const [startDate, endDate] = searchParams.createTime;
+      filtered = filtered.filter(item => {
+        if (!item.createTime) return false;
+        const createTime = new Date(item.createTime);
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        return createTime >= start && createTime <= end;
+      });
+    }
+
+    return filtered;
+  }, [searchParams]);
+
+  // 过滤和分页数据
+  const filterAndPaginateData = useCallback(() => {
+    const filtered = applyFilter(allJobData);
+    setFilteredData(filtered);
+    
+    // 分页处理
+    const startIndex = (pageData.page - 1) * pageData.pageSize;
+    const endIndex = startIndex + pageData.pageSize;
+    const paginatedData = filtered.slice(startIndex, endIndex);
+    
+    setJobData(paginatedData);
+    setPageData(prev => ({ ...prev, total: filtered.length }));
+  }, [allJobData, applyFilter, pageData.page, pageData.pageSize]);
+
   // 获取任务数据
   const getJobData = useCallback(async () => {
     try {
@@ -122,16 +180,30 @@ const JobManagement = () => {
       console.log("搜索参数:", searchParams);
       console.log("分页参数:", { page: pageData.page, pageSize: pageData.pageSize });
       
-      // 这里使用模拟数据
-      setJobData(mockJobData);
-      setPageData(prev => ({ ...prev, total: mockJobData.length }));
+      // 如果allJobData为空，才使用mockJobData初始化
+      if (allJobData.length === 0) {
+        setAllJobData(mockJobData);
+        // 初始化时应用过滤和分页
+        const filtered = applyFilter(mockJobData);
+        setFilteredData(filtered);
+        
+        const startIndex = (pageData.page - 1) * pageData.pageSize;
+        const endIndex = startIndex + pageData.pageSize;
+        const paginatedData = filtered.slice(startIndex, endIndex);
+        
+        setJobData(paginatedData);
+        setPageData(prev => ({ ...prev, total: filtered.length }));
+      } else {
+        // 应用搜索过滤和分页
+        filterAndPaginateData();
+      }
       
       message.success("数据加载成功");
     } catch (e) {
       console.log("获取任务数据失败:", e);
       message.error("获取任务数据失败");
     }
-  }, [pageData.page, pageData.pageSize, searchParams]);
+  }, [pageData.page, pageData.pageSize, searchParams, allJobData.length, applyFilter, filterAndPaginateData]);
 
   // 处理编辑按钮点击
   const handleEdit = (record: JobData) => {
@@ -158,11 +230,15 @@ const JobManagement = () => {
   const confirmDelete = async () => {
     if (currentJob?.id) {
       try {
-        // 这里调用删除API
+        // 从本地数据中删除任务
+        const updatedData = allJobData.filter(job => job.id !== currentJob.id);
+        setAllJobData(updatedData);
+        
+        // 重新应用过滤和分页
+        filterAndPaginateData();
+        
         console.log("删除任务 ID:", currentJob.id);
         message.success("删除成功");
-        // 重新获取数据
-        getJobData();
       } catch (error: unknown) {
         console.error(error);
         message.error("删除失败");
@@ -174,9 +250,37 @@ const JobManagement = () => {
   // 处理新增
   const handleAdd = async () => {
     try {
-      console.log("新增任务:", newJob);
+      // 验证必填字段
+      if (!newJob.jobName || !newJob.jobGroup || !newJob.invokeTarget || !newJob.cronExpression) {
+        message.error("任务名称、任务组名、调用目标字符串和cron表达式不能为空");
+        return;
+      }
+
+      // 验证cron表达式格式（简单验证）
+      const cronRegex = /^(\S+\s+){5}\S+$/;
+      if (!cronRegex.test(newJob.cronExpression)) {
+        message.error("cron表达式格式不正确，请输入正确的cron表达式");
+        return;
+      }
+
+      // 创建新任务对象
+      const newJobWithId: JobData = {
+        ...newJob,
+        id: Math.max(...allJobData.map(j => j.id), 0) + 1,
+        createTime: new Date().toLocaleString(),
+      };
+
+      // 更新本地数据
+      const updatedData = [...allJobData, newJobWithId];
+      setAllJobData(updatedData);
+      
+      // 重新应用过滤和分页
+      filterAndPaginateData();
+      
+      console.log("新增任务:", newJobWithId);
       message.success("新增成功");
       setIsAddModalVisible(false);
+      
       // 重置表单
       setNewJob({
         jobName: "",
@@ -186,8 +290,6 @@ const JobManagement = () => {
         status: true,
         remark: "",
       });
-      // 重新获取数据
-      getJobData();
     } catch (e) {
       console.log("新增失败:", e);
       message.error("新增失败");
@@ -197,11 +299,33 @@ const JobManagement = () => {
   // 处理编辑保存
   const handleEditSave = async () => {
     try {
+      if (!currentJob) return;
+      
+      // 验证必填字段
+      if (!currentJob.jobName || !currentJob.jobGroup || !currentJob.invokeTarget || !currentJob.cronExpression) {
+        message.error("任务名称、任务组名、调用目标字符串和cron表达式不能为空");
+        return;
+      }
+
+      // 验证cron表达式格式（简单验证）
+      const cronRegex = /^(\S+\s+){5}\S+$/;
+      if (!cronRegex.test(currentJob.cronExpression)) {
+        message.error("cron表达式格式不正确，请输入正确的cron表达式");
+        return;
+      }
+
+      // 更新本地数据
+      const updatedData = allJobData.map(job => 
+        job.id === currentJob.id ? currentJob : job
+      );
+      setAllJobData(updatedData);
+      
+      // 重新应用过滤和分页
+      filterAndPaginateData();
+      
       console.log("保存任务信息:", currentJob);
       message.success("保存成功");
       setIsEditModalVisible(false);
-      // 重新获取数据
-      getJobData();
     } catch (e) {
       console.log("保存失败:", e);
       message.error("保存失败");
@@ -210,23 +334,37 @@ const JobManagement = () => {
 
   // 重置搜索条件
   const handleReset = () => {
-    setSearchParams({
+    const resetParams = {
       jobName: "",
       jobGroup: "",
       status: "",
-    });
+      createTime: null,
+    };
+    setSearchParams(resetParams);
+    setPageData(prev => ({ ...prev, page: 1 }));
+    
+    // 重置后显示全部数据
+    setFilteredData(allJobData);
+    const startIndex = 0;
+    const endIndex = pageData.pageSize;
+    const paginatedData = allJobData.slice(startIndex, endIndex);
+    setJobData(paginatedData);
+    setPageData(prev => ({ ...prev, total: allJobData.length }));
   };
 
   // 处理状态切换
   const handleStatusChange = async (id: number, status: boolean) => {
     try {
-      console.log(`切换任务 ${id} 状态为:`, status);
-      // 更新本地数据
-      setJobData(prev => 
-        prev.map(job => 
-          job.id === id ? { ...job, status } : job
-        )
+      // 更新本地数据中的状态
+      const updatedData = allJobData.map(job => 
+        job.id === id ? { ...job, status } : job
       );
+      setAllJobData(updatedData);
+      
+      // 重新应用过滤和分页
+      filterAndPaginateData();
+      
+      console.log(`切换任务 ${id} 状态为:`, status);
       message.success(status ? "任务已启用" : "任务已停用");
     } catch (e) {
       console.log("状态更新失败:", e);
@@ -236,13 +374,49 @@ const JobManagement = () => {
 
   // 导出功能
   const handleExport = () => {
-    console.log("导出定时任务数据");
-    message.info("导出功能待实现");
+    try {
+      // 使用过滤后的数据进行导出
+      const dataToExport = filteredData;
+      
+      if (dataToExport.length === 0) {
+        message.warning("没有数据可以导出");
+        return;
+      }
+
+      const exportData = dataToExport.map(item => ({
+        "任务编号": item.id,
+        "任务名称": item.jobName,
+        "任务组名": item.jobGroup,
+        "调用目标字符串": item.invokeTarget,
+        "cron执行表达式": item.cronExpression,
+        "状态": item.status ? "正常" : "暂停",
+        "创建时间": item.createTime || "",
+        "备注": item.remark || "",
+      }));
+
+      const fileName = `定时任务管理-${new Date().toLocaleDateString()}.xlsx`;
+      
+      exportToExcel(exportData, fileName);
+      message.success(`成功导出 ${dataToExport.length} 条数据`);
+      
+      console.log("导出数据:", dataToExport);
+    } catch (e) {
+      console.log("导出失败:", e);
+      message.error("导出失败");
+    }
   };
 
   useEffect(() => {
     getJobData();
   }, [getJobData]);
+
+  // 监听搜索参数变化，自动过滤数据
+  useEffect(() => {
+    if (allJobData.length > 0) {
+      setPageData(prev => ({ ...prev, page: 1 })); // 重置到第一页
+      filterAndPaginateData();
+    }
+  }, [searchParams, filterAndPaginateData]);
 
   return (
     <div className={styles.jobManagement}>
@@ -295,6 +469,18 @@ const JobManagement = () => {
             }}
             value={searchParams?.status}
             allowClear
+          />
+        </Form.Item>
+        <Form.Item label="创建时间" name="createTime">
+          <DatePicker.RangePicker
+            style={{ width: 240 }}
+            onChange={(dates, dateStrings) => {
+              setSearchParams({
+                ...searchParams,
+                createTime: dates ? [dateStrings[0], dateStrings[1]] : null,
+              });
+            }}
+            placeholder={["开始日期", "结束日期"]}
           />
         </Form.Item>
         <Form.Item>
@@ -423,6 +609,13 @@ const JobManagement = () => {
               unCheckedChildren="暂停"
             />
           )}
+        />
+        <Column 
+          title="创建时间" 
+          dataIndex="createTime" 
+          key="createTime" 
+          width={180}
+          render={(text: string) => text || '-'}
         />
         <Column
           title="操作"

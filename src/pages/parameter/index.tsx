@@ -18,6 +18,7 @@ import {
   ReloadOutlined,
 } from "@ant-design/icons";
 import TableComponent from "@/components/Table";
+import { exportToExcel } from "@/hooks/exportToExcel";
 import styles from "./index.module.scss";
 
 // 参数数据接口
@@ -128,6 +129,7 @@ const mockParameterData: ParameterData[] = [
 const ParameterManagement = () => {
   // 参数数据
   const [parameterData, setParameterData] = useState<ParameterData[]>([]);
+  const [filteredData, setFilteredData] = useState<ParameterData[]>([]);
   const [searchParams, setSearchParams] = useState<SearchParams>({
     parameterName: "",
     parameterKey: "",
@@ -155,6 +157,52 @@ const ParameterManagement = () => {
     remark: "",
   });
 
+  // 过滤数据的通用函数
+  const applyFilter = useCallback((data: ParameterData[]) => {
+    let filtered = [...data];
+
+    // 参数名称过滤
+    if (searchParams.parameterName) {
+      filtered = filtered.filter(item => 
+        item.parameterName.toLowerCase().includes(searchParams.parameterName!.toLowerCase())
+      );
+    }
+
+    // 参数键名过滤
+    if (searchParams.parameterKey) {
+      filtered = filtered.filter(item => 
+        item.parameterKey.toLowerCase().includes(searchParams.parameterKey!.toLowerCase())
+      );
+    }
+
+    // 系统内置过滤
+    if (searchParams.isSystemBuiltIn) {
+      const isBuiltIn = searchParams.isSystemBuiltIn === "true";
+      filtered = filtered.filter(item => item.isSystemBuiltIn === isBuiltIn);
+    }
+
+    // 创建时间过滤
+    if (searchParams.createTime && searchParams.createTime.length === 2) {
+      const [startDate, endDate] = searchParams.createTime;
+      filtered = filtered.filter(item => {
+        const createTime = new Date(item.createTime);
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999); // 包含结束日期的整天
+        return createTime >= start && createTime <= end;
+      });
+    }
+
+    return filtered;
+  }, [searchParams]);
+
+  // 过滤数据
+  const filterData = useCallback(() => {
+    const filtered = applyFilter(parameterData);
+    setFilteredData(filtered);
+    setPageData(prev => ({ ...prev, total: filtered.length, page: 1 }));
+  }, [parameterData, applyFilter]);
+
   // 获取参数数据
   const getParameterData = useCallback(async () => {
     try {
@@ -162,16 +210,23 @@ const ParameterManagement = () => {
       console.log("搜索参数:", searchParams);
       console.log("分页参数:", { page: pageData.page, pageSize: pageData.pageSize });
       
-      // 这里使用模拟数据
-      setParameterData(mockParameterData);
-      setPageData(prev => ({ ...prev, total: mockParameterData.length }));
+      // 如果parameterData为空，才使用mockParameterData初始化
+      if (parameterData.length === 0) {
+        setParameterData(mockParameterData);
+        // 初始化时显示全部数据
+        setFilteredData(mockParameterData);
+        setPageData(prev => ({ ...prev, total: mockParameterData.length }));
+      } else {
+        // 应用搜索过滤
+        filterData();
+      }
       
       message.success("数据加载成功");
     } catch (e) {
       console.log("获取参数数据失败:", e);
       message.error("获取参数数据失败");
     }
-  }, [pageData.page, pageData.pageSize, searchParams]);
+  }, [pageData.page, pageData.pageSize, searchParams, parameterData.length, filterData]);
 
   // 处理编辑按钮点击
   const handleEdit = (record: ParameterData) => {
@@ -191,11 +246,24 @@ const ParameterManagement = () => {
   const confirmDelete = async () => {
     if (currentParameter?.id) {
       try {
-        // 这里调用删除API
+        // 检查是否为系统内置参数
+        if (currentParameter.isSystemBuiltIn) {
+          message.error("系统内置参数不允许删除");
+          setIsDeleteModalVisible(false);
+          return;
+        }
+
+        // 从本地数据中过滤掉要删除的参数
+        const filteredParameterData = parameterData.filter(parameter => parameter.id !== currentParameter.id);
+        setParameterData(filteredParameterData);
+        
+        // 应用过滤到删除后的数据
+        const filtered = applyFilter(filteredParameterData);
+        setFilteredData(filtered);
+        setPageData(prev => ({ ...prev, total: filtered.length }));
+        
         console.log("删除参数 ID:", currentParameter.id);
         message.success("删除成功");
-        // 重新获取数据
-        getParameterData();
       } catch (error: unknown) {
         console.error(error);
         message.error("删除失败");
@@ -207,9 +275,39 @@ const ParameterManagement = () => {
   // 处理新增
   const handleAdd = async () => {
     try {
-      console.log("新增参数:", newParameter);
+      // 验证必填字段
+      if (!newParameter.parameterName || !newParameter.parameterKey || !newParameter.parameterValue) {
+        message.error("参数名称、参数键名和参数键值不能为空");
+        return;
+      }
+
+      // 检查参数键名是否重复
+      const isDuplicate = parameterData.some(param => param.parameterKey === newParameter.parameterKey);
+      if (isDuplicate) {
+        message.error("参数键名已存在，请使用其他键名");
+        return;
+      }
+
+      // 创建新参数对象
+      const newParameterWithId: ParameterData = {
+        ...newParameter,
+        id: Math.max(...parameterData.map(p => p.id), 0) + 1,
+        createTime: new Date().toLocaleString(),
+      };
+
+      // 更新本地数据
+      const updatedData = [...parameterData, newParameterWithId];
+      setParameterData(updatedData);
+      
+      // 应用过滤到新数据
+      const filtered = applyFilter(updatedData);
+      setFilteredData(filtered);
+      setPageData(prev => ({ ...prev, total: filtered.length }));
+      
+      console.log("新增参数:", newParameterWithId);
       message.success("新增成功");
       setIsAddModalVisible(false);
+      
       // 重置表单
       setNewParameter({
         parameterName: "",
@@ -218,8 +316,6 @@ const ParameterManagement = () => {
         isSystemBuiltIn: false,
         remark: "",
       });
-      // 重新获取数据
-      getParameterData();
     } catch (e) {
       console.log("新增失败:", e);
       message.error("新增失败");
@@ -229,11 +325,37 @@ const ParameterManagement = () => {
   // 处理编辑保存
   const handleEditSave = async () => {
     try {
+      if (!currentParameter) return;
+      
+      // 验证必填字段
+      if (!currentParameter.parameterName || !currentParameter.parameterKey || !currentParameter.parameterValue) {
+        message.error("参数名称、参数键名和参数键值不能为空");
+        return;
+      }
+
+      // 检查参数键名是否重复（排除当前编辑的参数）
+      const isDuplicate = parameterData.some(param => 
+        param.parameterKey === currentParameter.parameterKey && param.id !== currentParameter.id
+      );
+      if (isDuplicate) {
+        message.error("参数键名已存在，请使用其他键名");
+        return;
+      }
+
+      // 直接更新本地数据
+      const updatedParameterData = parameterData.map(parameter => 
+        parameter.id === currentParameter.id ? currentParameter : parameter
+      );
+      
+      setParameterData(updatedParameterData);
+      
+      // 应用过滤到更新后的数据
+      const filtered = applyFilter(updatedParameterData);
+      setFilteredData(filtered);
+      setPageData(prev => ({ ...prev, total: filtered.length }));
       console.log("保存参数信息:", currentParameter);
       message.success("保存成功");
       setIsEditModalVisible(false);
-      // 重新获取数据
-      getParameterData();
     } catch (e) {
       console.log("保存失败:", e);
       message.error("保存失败");
@@ -242,12 +364,16 @@ const ParameterManagement = () => {
 
   // 重置搜索条件
   const handleReset = () => {
-    setSearchParams({
+    const resetParams = {
       parameterName: "",
       parameterKey: "",
       isSystemBuiltIn: "",
       createTime: null,
-    });
+    };
+    setSearchParams(resetParams);
+    // 重置后显示全部数据
+    setFilteredData(parameterData);
+    setPageData(prev => ({ ...prev, total: parameterData.length, page: 1 }));
   };
 
   // 刷新缓存
@@ -261,9 +387,51 @@ const ParameterManagement = () => {
     }
   };
 
+  // 处理导出功能
+  const handleExport = (selectedRows: ParameterData[]) => {
+    try {
+      const dataToExport = selectedRows.length > 0 ? selectedRows : filteredData;
+      
+      if (dataToExport.length === 0) {
+        message.warning("没有数据可以导出");
+        return;
+      }
+
+      // 格式化导出数据
+      const exportData = dataToExport.map(item => ({
+        "参数主键": item.id,
+        "参数名称": item.parameterName,
+        "参数键名": item.parameterKey,
+        "参数键值": item.parameterValue,
+        "系统内置": item.isSystemBuiltIn ? "是" : "否",
+        "备注": item.remark || "",
+        "创建时间": item.createTime,
+      }));
+
+      const fileName = selectedRows.length > 0 
+        ? `参数配置-选中数据-${new Date().toLocaleDateString()}.xlsx`
+        : `参数配置-全部数据-${new Date().toLocaleDateString()}.xlsx`;
+      
+      exportToExcel(exportData, fileName);
+      message.success(`成功导出 ${dataToExport.length} 条数据`);
+      
+      console.log("导出数据:", dataToExport);
+    } catch (e) {
+      console.log("导出失败:", e);
+      message.error("导出失败");
+    }
+  };
+
   useEffect(() => {
     getParameterData();
   }, [getParameterData]);
+
+  // 监听搜索参数变化，自动过滤数据
+  useEffect(() => {
+    if (parameterData.length > 0) {
+      filterData();
+    }
+  }, [searchParams, filterData]);
 
   return (
     <div className={styles.parameterManagement}>
@@ -343,7 +511,7 @@ const ParameterManagement = () => {
 
       {/* 数据表格 */}
       <TableComponent<ParameterData>
-        data={parameterData}
+        data={filteredData}
         toolbarRender={(_, selectedRows) => (
           <div className={styles.tableHeader}>
             <Button 
@@ -369,10 +537,7 @@ const ParameterManagement = () => {
               删除
             </Button>
             <Button 
-              onClick={() => {
-                console.log("导出选中数据:", selectedRows);
-                message.info("导出功能待实现");
-              }}
+              onClick={() => handleExport(selectedRows)}
             >
               导出
             </Button>

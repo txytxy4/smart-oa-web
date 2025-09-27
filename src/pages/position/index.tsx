@@ -18,6 +18,7 @@ import {
   PlusOutlined,
 } from "@ant-design/icons";
 import TableComponent from "@/components/Table";
+import { exportToExcel } from "@/hooks/exportToExcel";
 import styles from "./index.module.scss";
 
 // 岗位数据接口
@@ -126,16 +127,18 @@ const PositionManagement = () => {
       console.log("搜索参数:", searchParams);
       console.log("分页参数:", { page: pageData.page, pageSize: pageData.pageSize });
       
-      // 这里使用模拟数据
-      setPositionData(mockPositionData);
-      setPageData(prev => ({ ...prev, total: mockPositionData.length }));
+      // 如果positionData为空，才使用mockPositionData初始化
+      if (positionData.length === 0) {
+        setPositionData(mockPositionData);
+        setPageData(prev => ({ ...prev, total: mockPositionData.length }));
+      }
       
       message.success("数据加载成功");
     } catch (e) {
       console.log("获取岗位数据失败:", e);
       message.error("获取岗位数据失败");
     }
-  }, [pageData.page, pageData.pageSize, searchParams]);
+  }, [pageData.page, pageData.pageSize, searchParams, positionData.length]);
 
   // 处理编辑按钮点击
   const handleEdit = (record: PositionData) => {
@@ -155,11 +158,13 @@ const PositionManagement = () => {
   const confirmDelete = async () => {
     if (currentPosition?.id) {
       try {
-        // 这里调用删除API
+        // 从本地数据中过滤掉要删除的岗位
+        const filteredPositionData = positionData.filter(position => position.id !== currentPosition.id);
+        setPositionData(filteredPositionData);
+        setPageData(prev => ({ ...prev, total: prev.total - 1 }));
+        
         console.log("删除岗位 ID:", currentPosition.id);
         message.success("删除成功");
-        // 重新获取数据
-        getPositionData();
       } catch (error: unknown) {
         console.error(error);
         message.error("删除失败");
@@ -171,9 +176,34 @@ const PositionManagement = () => {
   // 处理新增
   const handleAdd = async () => {
     try {
-      console.log("新增岗位:", newPosition);
+      // 验证必填字段
+      if (!newPosition.postId || !newPosition.postName) {
+        message.error("岗位编码和岗位名称不能为空");
+        return;
+      }
+
+      // 检查岗位编码是否重复
+      const isDuplicate = positionData.some(pos => pos.postId === newPosition.postId);
+      if (isDuplicate) {
+        message.error("岗位编码已存在，请使用其他编码");
+        return;
+      }
+
+      // 创建新岗位对象
+      const newPositionWithId: PositionData = {
+        ...newPosition,
+        id: Math.max(...positionData.map(p => p.id), 0) + 1,
+        createTime: new Date().toLocaleString(),
+      };
+
+      // 更新本地数据
+      setPositionData([...positionData, newPositionWithId]);
+      setPageData(prev => ({ ...prev, total: prev.total + 1 }));
+      
+      console.log("新增岗位:", newPositionWithId);
       message.success("新增成功");
       setIsAddModalVisible(false);
+      
       // 重置表单
       setNewPosition({
         postId: "",
@@ -182,8 +212,6 @@ const PositionManagement = () => {
         status: true,
         remark: "",
       });
-      // 重新获取数据
-      getPositionData();
     } catch (e) {
       console.log("新增失败:", e);
       message.error("新增失败");
@@ -193,11 +221,32 @@ const PositionManagement = () => {
   // 处理编辑保存
   const handleEditSave = async () => {
     try {
+      if (!currentPosition) return;
+      
+      // 验证必填字段
+      if (!currentPosition.postId || !currentPosition.postName) {
+        message.error("岗位编码和岗位名称不能为空");
+        return;
+      }
+
+      // 检查岗位编码是否重复（排除当前编辑的岗位）
+      const isDuplicate = positionData.some(pos => 
+        pos.postId === currentPosition.postId && pos.id !== currentPosition.id
+      );
+      if (isDuplicate) {
+        message.error("岗位编码已存在，请使用其他编码");
+        return;
+      }
+
+      // 直接更新本地数据
+      const updatedPositionData = positionData.map(position => 
+        position.id === currentPosition.id ? currentPosition : position
+      );
+      
+      setPositionData(updatedPositionData);
       console.log("保存岗位信息:", currentPosition);
       message.success("保存成功");
       setIsEditModalVisible(false);
-      // 重新获取数据
-      getPositionData();
     } catch (e) {
       console.log("保存失败:", e);
       message.error("保存失败");
@@ -228,6 +277,41 @@ const PositionManagement = () => {
     } catch (e) {
       console.log("状态更新失败:", e);
       message.error("状态更新失败");
+    }
+  };
+
+  // 处理导出功能
+  const handleExport = (selectedRows: PositionData[]) => {
+    try {
+      const dataToExport = selectedRows.length > 0 ? selectedRows : positionData;
+      
+      if (dataToExport.length === 0) {
+        message.warning("没有数据可以导出");
+        return;
+      }
+
+      // 格式化导出数据
+      const exportData = dataToExport.map(item => ({
+        "岗位编号": item.id,
+        "岗位编码": item.postId,
+        "岗位名称": item.postName,
+        "岗位排序": item.postSort,
+        "状态": item.status ? "正常" : "停用",
+        "创建时间": item.createTime,
+        "备注": item.remark || "",
+      }));
+
+      const fileName = selectedRows.length > 0 
+        ? `岗位管理-选中数据-${new Date().toLocaleDateString()}.xlsx`
+        : `岗位管理-全部数据-${new Date().toLocaleDateString()}.xlsx`;
+      
+      exportToExcel(exportData, fileName);
+      message.success(`成功导出 ${dataToExport.length} 条数据`);
+      
+      console.log("导出数据:", dataToExport);
+    } catch (e) {
+      console.log("导出失败:", e);
+      message.error("导出失败");
     }
   };
 
@@ -339,10 +423,7 @@ const PositionManagement = () => {
               删除
             </Button>
             <Button 
-              onClick={() => {
-                console.log("导出选中数据:", selectedRows);
-                message.info("导出功能待实现");
-              }}
+              onClick={() => handleExport(selectedRows)}
             >
               导出
             </Button>

@@ -17,6 +17,7 @@ import {
   PlusOutlined,
 } from "@ant-design/icons";
 import TableComponent from "@/components/Table";
+import { exportToExcel } from "@/hooks/exportToExcel";
 import styles from "./index.module.scss";
 
 // 公告数据接口
@@ -71,6 +72,7 @@ const mockAnnouncementData: AnnouncementData[] = [
 const AnnouncementManagement = () => {
   // 公告数据
   const [announcementData, setAnnouncementData] = useState<AnnouncementData[]>([]);
+  const [filteredData, setFilteredData] = useState<AnnouncementData[]>([]);
   const [searchParams, setSearchParams] = useState<SearchParams>({
     announcementTitle: "",
     operator: "",
@@ -96,6 +98,39 @@ const AnnouncementManagement = () => {
     content: "",
   });
 
+  // 过滤数据的通用函数
+  const applyFilter = useCallback((data: AnnouncementData[]) => {
+    let filtered = [...data];
+
+    // 公告标题过滤
+    if (searchParams.announcementTitle) {
+      filtered = filtered.filter(item => 
+        item.announcementTitle.toLowerCase().includes(searchParams.announcementTitle!.toLowerCase())
+      );
+    }
+
+    // 操作人员过滤（对应创建者字段）
+    if (searchParams.operator) {
+      filtered = filtered.filter(item => 
+        item.creator.toLowerCase().includes(searchParams.operator!.toLowerCase())
+      );
+    }
+
+    // 公告类型过滤
+    if (searchParams.announcementType) {
+      filtered = filtered.filter(item => item.announcementType === searchParams.announcementType);
+    }
+
+    return filtered;
+  }, [searchParams]);
+
+  // 过滤数据
+  const filterData = useCallback(() => {
+    const filtered = applyFilter(announcementData);
+    setFilteredData(filtered);
+    setPageData(prev => ({ ...prev, total: filtered.length, page: 1 }));
+  }, [announcementData, applyFilter]);
+
   // 获取公告数据
   const getAnnouncementData = useCallback(async () => {
     try {
@@ -103,16 +138,23 @@ const AnnouncementManagement = () => {
       console.log("搜索参数:", searchParams);
       console.log("分页参数:", { page: pageData.page, pageSize: pageData.pageSize });
       
-      // 这里使用模拟数据
-      setAnnouncementData(mockAnnouncementData);
-      setPageData(prev => ({ ...prev, total: mockAnnouncementData.length }));
+      // 如果announcementData为空，才使用mockAnnouncementData初始化
+      if (announcementData.length === 0) {
+        setAnnouncementData(mockAnnouncementData);
+        // 初始化时显示全部数据
+        setFilteredData(mockAnnouncementData);
+        setPageData(prev => ({ ...prev, total: mockAnnouncementData.length }));
+      } else {
+        // 应用搜索过滤
+        filterData();
+      }
       
       message.success("数据加载成功");
     } catch (e) {
       console.log("获取公告数据失败:", e);
       message.error("获取公告数据失败");
     }
-  }, [pageData.page, pageData.pageSize, searchParams]);
+  }, [pageData.page, pageData.pageSize, searchParams, announcementData.length, filterData]);
 
   // 处理编辑按钮点击
   const handleEdit = (record: AnnouncementData) => {
@@ -132,11 +174,17 @@ const AnnouncementManagement = () => {
   const confirmDelete = async () => {
     if (currentAnnouncement?.id) {
       try {
-        // 这里调用删除API
+        // 从本地数据中过滤掉要删除的公告
+        const filteredAnnouncementData = announcementData.filter(announcement => announcement.id !== currentAnnouncement.id);
+        setAnnouncementData(filteredAnnouncementData);
+        
+        // 应用过滤到删除后的数据
+        const filtered = applyFilter(filteredAnnouncementData);
+        setFilteredData(filtered);
+        setPageData(prev => ({ ...prev, total: filtered.length }));
+        
         console.log("删除公告 ID:", currentAnnouncement.id);
         message.success("删除成功");
-        // 重新获取数据
-        getAnnouncementData();
       } catch (error: unknown) {
         console.error(error);
         message.error("删除失败");
@@ -148,9 +196,33 @@ const AnnouncementManagement = () => {
   // 处理新增
   const handleAdd = async () => {
     try {
-      console.log("新增公告:", newAnnouncement);
+      // 验证必填字段
+      if (!newAnnouncement.announcementTitle || !newAnnouncement.announcementType) {
+        message.error("公告标题和公告类型不能为空");
+        return;
+      }
+
+      // 创建新公告对象
+      const newAnnouncementWithId: AnnouncementData = {
+        ...newAnnouncement,
+        id: Math.max(...announcementData.map(a => a.id), 0) + 1,
+        creator: "admin", // 实际项目中应该从用户信息中获取
+        createTime: new Date().toLocaleDateString(),
+      };
+
+      // 更新本地数据
+      const updatedData = [...announcementData, newAnnouncementWithId];
+      setAnnouncementData(updatedData);
+      
+      // 应用过滤到新数据
+      const filtered = applyFilter(updatedData);
+      setFilteredData(filtered);
+      setPageData(prev => ({ ...prev, total: filtered.length }));
+      
+      console.log("新增公告:", newAnnouncementWithId);
       message.success("新增成功");
       setIsAddModalVisible(false);
+      
       // 重置表单
       setNewAnnouncement({
         announcementTitle: "",
@@ -158,8 +230,6 @@ const AnnouncementManagement = () => {
         status: "正常",
         content: "",
       });
-      // 重新获取数据
-      getAnnouncementData();
     } catch (e) {
       console.log("新增失败:", e);
       message.error("新增失败");
@@ -169,11 +239,29 @@ const AnnouncementManagement = () => {
   // 处理编辑保存
   const handleEditSave = async () => {
     try {
+      if (!currentAnnouncement) return;
+      
+      // 验证必填字段
+      if (!currentAnnouncement.announcementTitle || !currentAnnouncement.announcementType) {
+        message.error("公告标题和公告类型不能为空");
+        return;
+      }
+
+      // 直接更新本地数据
+      const updatedAnnouncementData = announcementData.map(announcement => 
+        announcement.id === currentAnnouncement.id ? currentAnnouncement : announcement
+      );
+      
+      setAnnouncementData(updatedAnnouncementData);
+      
+      // 应用过滤到更新后的数据
+      const filtered = applyFilter(updatedAnnouncementData);
+      setFilteredData(filtered);
+      setPageData(prev => ({ ...prev, total: filtered.length }));
+      
       console.log("保存公告信息:", currentAnnouncement);
       message.success("保存成功");
       setIsEditModalVisible(false);
-      // 重新获取数据
-      getAnnouncementData();
     } catch (e) {
       console.log("保存失败:", e);
       message.error("保存失败");
@@ -182,11 +270,15 @@ const AnnouncementManagement = () => {
 
   // 重置搜索条件
   const handleReset = () => {
-    setSearchParams({
+    const resetParams = {
       announcementTitle: "",
       operator: "",
       announcementType: "",
-    });
+    };
+    setSearchParams(resetParams);
+    // 重置后显示全部数据
+    setFilteredData(announcementData);
+    setPageData(prev => ({ ...prev, total: announcementData.length, page: 1 }));
   };
 
   // 获取公告类型标签颜色
@@ -215,9 +307,51 @@ const AnnouncementManagement = () => {
     }
   };
 
+  // 处理导出功能
+  const handleExport = (selectedRows: AnnouncementData[]) => {
+    try {
+      const dataToExport = selectedRows.length > 0 ? selectedRows : filteredData;
+      
+      if (dataToExport.length === 0) {
+        message.warning("没有数据可以导出");
+        return;
+      }
+
+      // 格式化导出数据
+      const exportData = dataToExport.map(item => ({
+        "序号": item.id,
+        "公告标题": item.announcementTitle,
+        "公告类型": item.announcementType,
+        "状态": item.status,
+        "创建者": item.creator,
+        "创建时间": item.createTime,
+        "公告内容": item.content || "",
+      }));
+
+      const fileName = selectedRows.length > 0 
+        ? `公告管理-选中数据-${new Date().toLocaleDateString()}.xlsx`
+        : `公告管理-全部数据-${new Date().toLocaleDateString()}.xlsx`;
+      
+      exportToExcel(exportData, fileName);
+      message.success(`成功导出 ${dataToExport.length} 条数据`);
+      
+      console.log("导出数据:", dataToExport);
+    } catch (e) {
+      console.log("导出失败:", e);
+      message.error("导出失败");
+    }
+  };
+
   useEffect(() => {
     getAnnouncementData();
   }, [getAnnouncementData]);
+
+  // 监听搜索参数变化，自动过滤数据
+  useEffect(() => {
+    if (announcementData.length > 0) {
+      filterData();
+    }
+  }, [searchParams, filterData]);
 
   return (
     <div className={styles.announcementManagement}>
@@ -286,7 +420,7 @@ const AnnouncementManagement = () => {
 
       {/* 数据表格 */}
       <TableComponent<AnnouncementData>
-        data={announcementData}
+        data={filteredData}
         toolbarRender={(_, selectedRows) => (
           <div className={styles.tableHeader}>
             <Button 
@@ -310,6 +444,11 @@ const AnnouncementManagement = () => {
               disabled={selectedRows.length !== 1}
             >
               删除
+            </Button>
+            <Button 
+              onClick={() => handleExport(selectedRows)}
+            >
+              导出
             </Button>
           </div>
         )}

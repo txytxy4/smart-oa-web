@@ -21,6 +21,7 @@ import {
   SyncOutlined,
 } from "@ant-design/icons";
 import TableComponent from "@/components/Table";
+import { exportToExcel } from "@/hooks/exportToExcel";
 import styles from "./index.module.scss";
 
 // 字典数据接口
@@ -218,6 +219,8 @@ const getTagColor = (listClass?: string) => {
 const DictManagement = () => {
   // 字典数据
   const [dictData, setDictData] = useState<DictData[]>([]);
+  const [allDictData, setAllDictData] = useState<DictData[]>([]); // 存储所有数据
+  const [filteredData, setFilteredData] = useState<DictData[]>([]);
   const [searchParams, setSearchParams] = useState<SearchParams>({
     dictName: "",
     dictType: "",
@@ -250,6 +253,59 @@ const DictManagement = () => {
     remark: "",
   });
 
+  // 过滤数据的通用函数
+  const applyFilter = useCallback((data: DictData[]) => {
+    let filtered = [...data];
+
+    // 字典名称过滤
+    if (searchParams.dictName) {
+      filtered = filtered.filter(item => 
+        item.dictName.toLowerCase().includes(searchParams.dictName!.toLowerCase())
+      );
+    }
+
+    // 字典类型过滤
+    if (searchParams.dictType) {
+      filtered = filtered.filter(item => 
+        item.dictType.toLowerCase().includes(searchParams.dictType!.toLowerCase())
+      );
+    }
+
+    // 状态过滤
+    if (searchParams.status) {
+      const status = searchParams.status === "true";
+      filtered = filtered.filter(item => item.status === status);
+    }
+
+    // 创建时间过滤
+    if (searchParams.createTime && searchParams.createTime.length === 2) {
+      const [startDate, endDate] = searchParams.createTime;
+      filtered = filtered.filter(item => {
+        const createTime = new Date(item.createTime);
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        return createTime >= start && createTime <= end;
+      });
+    }
+
+    return filtered;
+  }, [searchParams]);
+
+  // 过滤和分页数据
+  const filterAndPaginateData = useCallback(() => {
+    const filtered = applyFilter(allDictData);
+    setFilteredData(filtered);
+    
+    // 分页处理
+    const startIndex = (pageData.page - 1) * pageData.pageSize;
+    const endIndex = startIndex + pageData.pageSize;
+    const paginatedData = filtered.slice(startIndex, endIndex);
+    
+    setDictData(paginatedData);
+    setPageData(prev => ({ ...prev, total: filtered.length }));
+  }, [allDictData, applyFilter, pageData.page, pageData.pageSize]);
+
   // 获取字典数据
   const getDictData = useCallback(async () => {
     try {
@@ -257,40 +313,30 @@ const DictManagement = () => {
       console.log("搜索参数:", searchParams);
       console.log("分页参数:", { page: pageData.page, pageSize: pageData.pageSize });
       
-      // 过滤数据
-      let filteredData = [...mockDictData];
-      
-      if (searchParams.dictName) {
-        filteredData = filteredData.filter(item => 
-          item.dictName.includes(searchParams.dictName!)
-        );
+      // 如果allDictData为空，才使用mockDictData初始化
+      if (allDictData.length === 0) {
+        setAllDictData(mockDictData);
+        // 初始化时应用过滤和分页
+        const filtered = applyFilter(mockDictData);
+        setFilteredData(filtered);
+        
+        const startIndex = (pageData.page - 1) * pageData.pageSize;
+        const endIndex = startIndex + pageData.pageSize;
+        const paginatedData = filtered.slice(startIndex, endIndex);
+        
+        setDictData(paginatedData);
+        setPageData(prev => ({ ...prev, total: filtered.length }));
+      } else {
+        // 应用搜索过滤和分页
+        filterAndPaginateData();
       }
-      
-      if (searchParams.dictType) {
-        filteredData = filteredData.filter(item => 
-          item.dictType.includes(searchParams.dictType!)
-        );
-      }
-      
-      if (searchParams.status) {
-        const statusBool = searchParams.status === 'true';
-        filteredData = filteredData.filter(item => item.status === statusBool);
-      }
-      
-      // 分页处理
-      const startIndex = (pageData.page - 1) * pageData.pageSize;
-      const endIndex = startIndex + pageData.pageSize;
-      const paginatedData = filteredData.slice(startIndex, endIndex);
-      
-      setDictData(paginatedData);
-      setPageData(prev => ({ ...prev, total: filteredData.length }));
       
       message.success("数据加载成功");
     } catch (e) {
       console.log("获取字典数据失败:", e);
       message.error("获取字典数据失败");
     }
-  }, [pageData.page, pageData.pageSize, searchParams]);
+  }, [pageData.page, pageData.pageSize, searchParams, allDictData.length, applyFilter, filterAndPaginateData]);
 
   // 处理编辑按钮点击
   const handleEdit = (record: DictData) => {
@@ -310,11 +356,15 @@ const DictManagement = () => {
   const confirmDelete = async () => {
     if (currentDict?.id) {
       try {
-        // 这里调用删除API
+        // 从本地数据中删除字典
+        const updatedData = allDictData.filter(dict => dict.id !== currentDict.id);
+        setAllDictData(updatedData);
+        
+        // 重新应用过滤和分页
+        filterAndPaginateData();
+        
         console.log("删除字典 ID:", currentDict.id);
         message.success("删除成功");
-        // 重新获取数据
-        getDictData();
       } catch (error: unknown) {
         console.error(error);
         message.error("删除失败");
@@ -326,9 +376,40 @@ const DictManagement = () => {
   // 处理新增
   const handleAdd = async () => {
     try {
-      console.log("新增字典:", newDict);
+      // 验证必填字段
+      if (!newDict.dictType || !newDict.dictLabel || !newDict.dictValue) {
+        message.error("字典类型、数据标签和数据键值不能为空");
+        return;
+      }
+
+      // 检查字典键值是否重复
+      const isDuplicate = allDictData.some(dict => 
+        dict.dictType === newDict.dictType && dict.dictValue === newDict.dictValue
+      );
+      if (isDuplicate) {
+        message.error("该字典类型下的键值已存在，请使用其他键值");
+        return;
+      }
+
+      // 创建新字典对象
+      const newDictWithId: DictData = {
+        ...newDict,
+        id: Math.max(...allDictData.map(d => d.id), 0) + 1,
+        dictName: newDict.dictName || newDict.dictType, // 如果没有提供dictName，使用dictType作为默认值
+        createTime: new Date().toLocaleString(),
+      };
+
+      // 更新本地数据
+      const updatedData = [...allDictData, newDictWithId];
+      setAllDictData(updatedData);
+      
+      // 重新应用过滤和分页
+      filterAndPaginateData();
+      
+      console.log("新增字典:", newDictWithId);
       message.success("新增成功");
       setIsAddModalVisible(false);
+      
       // 重置表单
       setNewDict({
         dictName: "",
@@ -342,8 +423,6 @@ const DictManagement = () => {
         status: true,
         remark: "",
       });
-      // 重新获取数据
-      getDictData();
     } catch (e) {
       console.log("新增失败:", e);
       message.error("新增失败");
@@ -353,11 +432,37 @@ const DictManagement = () => {
   // 处理编辑保存
   const handleEditSave = async () => {
     try {
+      if (!currentDict) return;
+      
+      // 验证必填字段
+      if (!currentDict.dictType || !currentDict.dictLabel || !currentDict.dictValue) {
+        message.error("字典类型、数据标签和数据键值不能为空");
+        return;
+      }
+
+      // 检查字典键值是否重复（排除当前编辑的记录）
+      const isDuplicate = allDictData.some(dict => 
+        dict.id !== currentDict.id && 
+        dict.dictType === currentDict.dictType && 
+        dict.dictValue === currentDict.dictValue
+      );
+      if (isDuplicate) {
+        message.error("该字典类型下的键值已存在，请使用其他键值");
+        return;
+      }
+
+      // 更新本地数据
+      const updatedData = allDictData.map(dict => 
+        dict.id === currentDict.id ? currentDict : dict
+      );
+      setAllDictData(updatedData);
+      
+      // 重新应用过滤和分页
+      filterAndPaginateData();
+      
       console.log("保存字典信息:", currentDict);
       message.success("保存成功");
       setIsEditModalVisible(false);
-      // 重新获取数据
-      getDictData();
     } catch (e) {
       console.log("保存失败:", e);
       message.error("保存失败");
@@ -366,23 +471,38 @@ const DictManagement = () => {
 
   // 重置搜索条件
   const handleReset = () => {
-    setSearchParams({
+    const resetParams = {
       dictName: "",
       dictType: "",
       status: "",
       createTime: null,
-    });
+    };
+    setSearchParams(resetParams);
     setPageData(prev => ({ ...prev, page: 1 }));
+    
+    // 重置后显示全部数据
+    setFilteredData(allDictData);
+    const startIndex = 0;
+    const endIndex = pageData.pageSize;
+    const paginatedData = allDictData.slice(startIndex, endIndex);
+    setDictData(paginatedData);
+    setPageData(prev => ({ ...prev, total: allDictData.length }));
   };
 
   // 处理状态切换
   const handleStatusChange = async (id: number, status: boolean) => {
     try {
+      // 更新本地数据中的状态
+      const updatedData = allDictData.map(dict => 
+        dict.id === id ? { ...dict, status } : dict
+      );
+      setAllDictData(updatedData);
+      
+      // 重新应用过滤和分页
+      filterAndPaginateData();
+      
       console.log(`切换字典 ${id} 状态为:`, status);
-      // 这里应该调用API更新状态
       message.success("状态更新成功");
-      // 重新获取数据
-      getDictData();
     } catch (e) {
       console.log("状态更新失败:", e);
       message.error("状态更新失败");
@@ -390,20 +510,37 @@ const DictManagement = () => {
   };
 
   // 导出功能
-  const handleExport = async () => {
+  const handleExport = () => {
     try {
-      console.log("导出字典数据");
-      // 模拟导出逻辑
-      const dataStr = JSON.stringify(dictData, null, 2);
-      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-      const exportFileDefaultName = `字典数据_${new Date().toISOString().slice(0, 10)}.json`;
+      // 使用过滤后的数据进行导出
+      const dataToExport = filteredData;
       
-      const linkElement = document.createElement('a');
-      linkElement.setAttribute('href', dataUri);
-      linkElement.setAttribute('download', exportFileDefaultName);
-      linkElement.click();
+      if (dataToExport.length === 0) {
+        message.warning("没有数据可以导出");
+        return;
+      }
+
+      const exportData = dataToExport.map(item => ({
+        "字典编号": item.id,
+        "字典名称": item.dictName,
+        "字典类型": item.dictType,
+        "字典标签": item.dictLabel,
+        "字典键值": item.dictValue,
+        "字典排序": item.dictSort,
+        "样式属性": item.cssClass || "",
+        "表格回显样式": item.listClass,
+        "是否默认": item.isDefault ? "是" : "否",
+        "状态": item.status ? "正常" : "停用",
+        "创建时间": item.createTime,
+        "备注": item.remark || "",
+      }));
+
+      const fileName = `字典管理-${new Date().toLocaleDateString()}.xlsx`;
       
-      message.success("导出成功");
+      exportToExcel(exportData, fileName);
+      message.success(`成功导出 ${dataToExport.length} 条数据`);
+      
+      console.log("导出数据:", dataToExport);
     } catch (e) {
       console.log("导出失败:", e);
       message.error("导出失败");
@@ -435,6 +572,14 @@ const DictManagement = () => {
   useEffect(() => {
     getDictData();
   }, [getDictData]);
+
+  // 监听搜索参数变化，自动过滤数据
+  useEffect(() => {
+    if (allDictData.length > 0) {
+      setPageData(prev => ({ ...prev, page: 1 })); // 重置到第一页
+      filterAndPaginateData();
+    }
+  }, [searchParams, filterAndPaginateData]);
 
   return (
     <div className={styles.dictManagement}>
@@ -529,11 +674,7 @@ const DictManagement = () => {
               <Button 
                 icon={<EditOutlined />}
                 onClick={() => {
-                  if (dictData.length > 0) {
-                    handleEdit(dictData[0]);
-                  } else {
-                    message.warning("请先选择要修改的数据");
-                  }
+                  message.info("请在表格中点击具体行的修改按钮进行编辑");
                 }}
               >
                 修改
@@ -542,11 +683,7 @@ const DictManagement = () => {
                 danger
                 icon={<DeleteOutlined />}
                 onClick={() => {
-                  if (dictData.length > 0) {
-                    handleDelete(dictData[0]);
-                  } else {
-                    message.warning("请先选择要删除的数据");
-                  }
+                  message.info("请在表格中点击具体行的删除按钮进行删除");
                 }}
               >
                 删除
@@ -684,6 +821,13 @@ const DictManagement = () => {
         width={600}
       >
         <Form layout="vertical">
+          <Form.Item label="字典名称">
+            <Input
+              placeholder="请输入字典名称"
+              value={newDict.dictName}
+              onChange={(e) => setNewDict({ ...newDict, dictName: e.target.value })}
+            />
+          </Form.Item>
           <Form.Item label="字典类型" required>
             <Input
               placeholder="请输入字典类型"
@@ -775,6 +919,15 @@ const DictManagement = () => {
       >
         {currentDict && (
           <Form layout="vertical">
+            <Form.Item label="字典名称">
+              <Input
+                placeholder="请输入字典名称"
+                value={currentDict.dictName}
+                onChange={(e) =>
+                  setCurrentDict({ ...currentDict, dictName: e.target.value })
+                }
+              />
+            </Form.Item>
             <Form.Item label="字典类型" required>
               <Input
                 placeholder="请输入字典类型"

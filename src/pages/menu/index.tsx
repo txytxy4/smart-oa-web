@@ -12,6 +12,7 @@ import {
   DatePicker,
   TreeSelect,
   InputNumber,
+  Radio,
 } from "antd";
 import {
   PlusOutlined,
@@ -28,6 +29,7 @@ import {
   ShoppingOutlined,
 } from "@ant-design/icons";
 import TableComponent from "@/components/Table";
+import { exportToExcel } from "@/hooks/exportToExcel";
 import styles from "./index.module.scss";
 
 // 菜单数据接口
@@ -400,10 +402,81 @@ const getIconComponent = (iconName?: string) => {
   return iconMap[iconName] || null;
 };
 
+// 获取树形数据中的最大ID
+const getMaxId = (data: MenuData[]): number => {
+  let maxId = 0;
+  const traverse = (nodes: MenuData[]) => {
+    nodes.forEach(node => {
+      if (node.id > maxId) {
+        maxId = node.id;
+      }
+      if (node.children && node.children.length > 0) {
+        traverse(node.children);
+      }
+    });
+  };
+  traverse(data);
+  return maxId;
+};
+
+// 在树形数据中添加新节点
+const addNodeToTree = (data: MenuData[], newNode: MenuData, parentId: number): MenuData[] => {
+  if (parentId === 0) {
+    // 添加到根级
+    return [...data, newNode];
+  }
+  
+  return data.map(node => {
+    if (node.id === parentId) {
+      // 找到父节点，添加到children中
+      return {
+        ...node,
+        children: node.children ? [...node.children, newNode] : [newNode]
+      };
+    } else if (node.children && node.children.length > 0) {
+      // 递归查找父节点
+      return {
+        ...node,
+        children: addNodeToTree(node.children, newNode, parentId)
+      };
+    }
+    return node;
+  });
+};
+
+// 在树形数据中更新节点
+const updateNodeInTree = (data: MenuData[], updatedNode: MenuData): MenuData[] => {
+  return data.map(node => {
+    if (node.id === updatedNode.id) {
+      return { ...updatedNode, children: node.children };
+    } else if (node.children && node.children.length > 0) {
+      return {
+        ...node,
+        children: updateNodeInTree(node.children, updatedNode)
+      };
+    }
+    return node;
+  });
+};
+
+// 在树形数据中删除节点
+const deleteNodeFromTree = (data: MenuData[], nodeId: number): MenuData[] => {
+  return data.filter(node => {
+    if (node.id === nodeId) {
+      return false; // 删除该节点
+    }
+    if (node.children && node.children.length > 0) {
+      node.children = deleteNodeFromTree(node.children, nodeId);
+    }
+    return true;
+  });
+};
+
 const MenuManagement = () => {
   // 菜单数据
   const [menuData, setMenuData] = useState<MenuData[]>([]);
   const [processedData, setProcessedData] = useState<MenuData[]>([]);
+  const [filteredData, setFilteredData] = useState<MenuData[]>([]);
   const [searchParams, setSearchParams] = useState<SearchParams>({
     menuName: "",
     status: "",
@@ -440,6 +513,59 @@ const MenuManagement = () => {
     remark: "",
   });
 
+  // 过滤数据的通用函数
+  const applyFilter = useCallback((data: MenuData[]) => {
+    const filterTree = (nodes: MenuData[]): MenuData[] => {
+      return nodes.filter(node => {
+        // 菜单名称过滤
+        let matchName = true;
+        if (searchParams.menuName) {
+          matchName = node.menuName.toLowerCase().includes(searchParams.menuName.toLowerCase());
+        }
+
+        // 状态过滤
+        let matchStatus = true;
+        if (searchParams.status) {
+          const status = searchParams.status === "true";
+          matchStatus = node.status === status;
+        }
+
+        // 创建时间过滤
+        let matchTime = true;
+        if (searchParams.createTime && searchParams.createTime.length === 2) {
+          const [startDate, endDate] = searchParams.createTime;
+          const createTime = new Date(node.createTime);
+          const start = new Date(startDate);
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          matchTime = createTime >= start && createTime <= end;
+        }
+
+        // 检查子节点是否匹配
+        let hasMatchingChildren = false;
+        if (node.children && node.children.length > 0) {
+          const filteredChildren = filterTree(node.children);
+          hasMatchingChildren = filteredChildren.length > 0;
+          if (hasMatchingChildren) {
+            node.children = filteredChildren;
+          }
+        }
+
+        // 如果当前节点匹配或者有匹配的子节点，则保留
+        return (matchName && matchStatus && matchTime) || hasMatchingChildren;
+      });
+    };
+
+    return filterTree([...data]);
+  }, [searchParams]);
+
+  // 过滤数据
+  const filterData = useCallback(() => {
+    const filtered = applyFilter(menuData);
+    const processedTreeData = processTreeData(filtered);
+    setFilteredData(processedTreeData);
+  }, [menuData, applyFilter]);
+
   // 获取菜单数据
   const getMenuData = useCallback(async () => {
     try {
@@ -447,21 +573,27 @@ const MenuManagement = () => {
       console.log("搜索参数:", searchParams);
       console.log("分页参数:", { page: pageData.page, pageSize: pageData.pageSize });
       
-      // 这里使用模拟数据
-      setMenuData(mockMenuData);
-      const processedTreeData = processTreeData(mockMenuData);
-      setProcessedData(processedTreeData);
-      
-      // 默认展开第一级
-      const firstLevelKeys = mockMenuData.map(item => item.id.toString());
-      setExpandedRowKeys(firstLevelKeys);
+      // 如果menuData为空，才使用mockMenuData初始化
+      if (menuData.length === 0) {
+        setMenuData(mockMenuData);
+        const processedTreeData = processTreeData(mockMenuData);
+        setProcessedData(processedTreeData);
+        setFilteredData(processedTreeData);
+        
+        // 默认展开第一级
+        const firstLevelKeys = mockMenuData.map(item => item.id.toString());
+        setExpandedRowKeys(firstLevelKeys);
+      } else {
+        // 应用搜索过滤
+        filterData();
+      }
       
       message.success("数据加载成功");
     } catch (e) {
       console.log("获取菜单数据失败:", e);
       message.error("获取菜单数据失败");
     }
-  }, [pageData.page, pageData.pageSize, searchParams]);
+  }, [pageData.page, pageData.pageSize, searchParams, menuData.length, filterData]);
 
   // 处理展开/收起
   const handleExpand = (expanded: boolean, record: MenuData) => {
@@ -514,11 +646,38 @@ const MenuManagement = () => {
   const confirmDelete = async () => {
     if (currentMenu?.id) {
       try {
-        // 这里调用删除API
+        // 检查是否有子菜单
+        const hasChildren = (data: MenuData[], nodeId: number): boolean => {
+          for (const node of data) {
+            if (node.id === nodeId && node.children && node.children.length > 0) {
+              return true;
+            }
+            if (node.children && node.children.length > 0) {
+              if (hasChildren(node.children, nodeId)) {
+                return true;
+              }
+            }
+          }
+          return false;
+        };
+
+        if (hasChildren(menuData, currentMenu.id)) {
+          message.error("该菜单下还有子菜单，无法删除");
+          setIsDeleteModalVisible(false);
+          return;
+        }
+
+        // 从本地数据中删除菜单
+        const updatedData = deleteNodeFromTree(menuData, currentMenu.id);
+        setMenuData(updatedData);
+        
+        // 更新处理后的数据用于表格显示
+        const processedTreeData = processTreeData(updatedData);
+        setProcessedData(processedTreeData);
+        setFilteredData(processedTreeData);
+        
         console.log("删除菜单 ID:", currentMenu.id);
         message.success("删除成功");
-        // 重新获取数据
-        getMenuData();
       } catch (error: unknown) {
         console.error(error);
         message.error("删除失败");
@@ -530,9 +689,32 @@ const MenuManagement = () => {
   // 处理新增
   const handleAdd = async () => {
     try {
-      console.log("新增菜单:", newMenu);
+      // 验证必填字段
+      if (!newMenu.menuName) {
+        message.error("菜单名称不能为空");
+        return;
+      }
+
+      // 创建新菜单对象
+      const newMenuWithId: MenuData = {
+        ...newMenu,
+        id: getMaxId(menuData) + 1,
+        createTime: new Date().toLocaleString(),
+      };
+
+      // 更新本地数据
+      const updatedData = addNodeToTree(menuData, newMenuWithId, newMenu.parentId);
+      setMenuData(updatedData);
+      
+      // 更新处理后的数据用于表格显示
+      const processedTreeData = processTreeData(updatedData);
+      setProcessedData(processedTreeData);
+      setFilteredData(processedTreeData);
+      
+      console.log("新增菜单:", newMenuWithId);
       message.success("新增成功");
       setIsAddModalVisible(false);
+      
       // 重置表单
       setNewMenu({
         menuName: "",
@@ -550,8 +732,6 @@ const MenuManagement = () => {
         icon: "",
         remark: "",
       });
-      // 重新获取数据
-      getMenuData();
     } catch (e) {
       console.log("新增失败:", e);
       message.error("新增失败");
@@ -561,11 +741,26 @@ const MenuManagement = () => {
   // 处理编辑保存
   const handleEditSave = async () => {
     try {
+      if (!currentMenu) return;
+      
+      // 验证必填字段
+      if (!currentMenu.menuName) {
+        message.error("菜单名称不能为空");
+        return;
+      }
+
+      // 更新本地数据
+      const updatedData = updateNodeInTree(menuData, currentMenu);
+      setMenuData(updatedData);
+      
+      // 更新处理后的数据用于表格显示
+      const processedTreeData = processTreeData(updatedData);
+      setProcessedData(processedTreeData);
+      setFilteredData(processedTreeData);
+      
       console.log("保存菜单信息:", currentMenu);
       message.success("保存成功");
       setIsEditModalVisible(false);
-      // 重新获取数据
-      getMenuData();
     } catch (e) {
       console.log("保存失败:", e);
       message.error("保存失败");
@@ -574,30 +769,110 @@ const MenuManagement = () => {
 
   // 重置搜索条件
   const handleReset = () => {
-    setSearchParams({
+    const resetParams = {
       menuName: "",
       status: "",
       createTime: null,
-    });
+    };
+    setSearchParams(resetParams);
+    // 重置后显示全部数据
+    const processedTreeData = processTreeData(menuData);
+    setFilteredData(processedTreeData);
   };
 
   // 处理状态切换
   const handleStatusChange = async (id: number, status: boolean) => {
     try {
+      // 在树形数据中更新状态
+      const updateStatus = (data: MenuData[]): MenuData[] => {
+        return data.map(node => {
+          if (node.id === id) {
+            return { ...node, status };
+          } else if (node.children && node.children.length > 0) {
+            return {
+              ...node,
+              children: updateStatus(node.children)
+            };
+          }
+          return node;
+        });
+      };
+
+      const updatedData = updateStatus(menuData);
+      setMenuData(updatedData);
+      
+      // 更新处理后的数据用于表格显示
+      const processedTreeData = processTreeData(updatedData);
+      setProcessedData(processedTreeData);
+      setFilteredData(processedTreeData);
+      
       console.log(`切换菜单 ${id} 状态为:`, status);
-      // 这里应该调用API更新状态
       message.success("状态更新成功");
-      // 重新获取数据
-      getMenuData();
     } catch (e) {
       console.log("状态更新失败:", e);
       message.error("状态更新失败");
     }
   };
 
+  // 处理导出功能
+  const handleExport = () => {
+    try {
+      // 将树形数据转换为扁平数据用于导出
+      const flattenData = (data: MenuData[], level = 0): any[] => {
+        let result: any[] = [];
+        data.forEach(item => {
+          result.push({
+            "菜单ID": item.id,
+            "菜单名称": "　".repeat(level * 2) + item.menuName, // 使用全角空格表示层级
+            "菜单类型": item.menuType === 'M' ? '目录' : item.menuType === 'C' ? '菜单' : '按钮',
+            "图标": item.icon || '',
+            "排序": item.orderNum,
+            "权限标识": item.perms || '',
+            "组件路径": item.component || '',
+            "路由地址": item.path || '',
+            "状态": item.status ? "正常" : "停用",
+            "显示状态": item.visible ? "显示" : "隐藏",
+            "是否外链": item.isFrame ? "是" : "否",
+            "是否缓存": item.isCache ? "缓存" : "不缓存",
+            "创建时间": item.createTime,
+            "备注": item.remark || "",
+          });
+          if (item.children && item.children.length > 0) {
+            result = result.concat(flattenData(item.children, level + 1));
+          }
+        });
+        return result;
+      };
+      
+      const dataToExport = flattenData(filteredData);
+      
+      if (dataToExport.length === 0) {
+        message.warning("没有数据可以导出");
+        return;
+      }
+
+      const fileName = `菜单管理-${new Date().toLocaleDateString()}.xlsx`;
+      
+      exportToExcel(dataToExport, fileName);
+      message.success(`成功导出 ${dataToExport.length} 条数据`);
+      
+      console.log("导出数据:", dataToExport);
+    } catch (e) {
+      console.log("导出失败:", e);
+      message.error("导出失败");
+    }
+  };
+
   useEffect(() => {
     getMenuData();
   }, [getMenuData]);
+
+  // 监听搜索参数变化，自动过滤数据
+  useEffect(() => {
+    if (menuData.length > 0) {
+      filterData();
+    }
+  }, [searchParams, filterData]);
 
   return (
     <div className={styles.menuManagement}>
@@ -664,7 +939,7 @@ const MenuManagement = () => {
 
       {/* 数据表格 */}
       <TableComponent<MenuData>
-        data={processedData}
+        data={filteredData}
         toolbarRender={() => (
           <div className={styles.tableHeader}>
             <Button 
@@ -676,6 +951,9 @@ const MenuManagement = () => {
             </Button>
             <Button onClick={handleExpandAll}>
               {expandedRowKeys.length > 0 ? '折叠' : '展开'}
+            </Button>
+            <Button onClick={handleExport}>
+              导出
             </Button>
           </div>
         )}

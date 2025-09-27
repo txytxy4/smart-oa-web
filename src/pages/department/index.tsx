@@ -202,6 +202,76 @@ const buildTreeSelectData = (data: DepartmentData[]): TreeSelectNode[] => {
   }));
 };
 
+// 获取树形数据中的最大ID
+const getMaxId = (data: DepartmentData[]): number => {
+  let maxId = 0;
+  const traverse = (nodes: DepartmentData[]) => {
+    nodes.forEach(node => {
+      if (node.id > maxId) {
+        maxId = node.id;
+      }
+      if (node.children && node.children.length > 0) {
+        traverse(node.children);
+      }
+    });
+  };
+  traverse(data);
+  return maxId;
+};
+
+// 在树形数据中添加新节点
+const addNodeToTree = (data: DepartmentData[], newNode: DepartmentData, parentId: number): DepartmentData[] => {
+  if (parentId === 0) {
+    // 添加到根级
+    return [...data, newNode];
+  }
+  
+  return data.map(node => {
+    if (node.id === parentId) {
+      // 找到父节点，添加到children中
+      return {
+        ...node,
+        children: node.children ? [...node.children, newNode] : [newNode]
+      };
+    } else if (node.children && node.children.length > 0) {
+      // 递归查找父节点
+      return {
+        ...node,
+        children: addNodeToTree(node.children, newNode, parentId)
+      };
+    }
+    return node;
+  });
+};
+
+// 在树形数据中更新节点
+const updateNodeInTree = (data: DepartmentData[], updatedNode: DepartmentData): DepartmentData[] => {
+  return data.map(node => {
+    if (node.id === updatedNode.id) {
+      return { ...updatedNode, children: node.children };
+    } else if (node.children && node.children.length > 0) {
+      return {
+        ...node,
+        children: updateNodeInTree(node.children, updatedNode)
+      };
+    }
+    return node;
+  });
+};
+
+// 在树形数据中删除节点
+const deleteNodeFromTree = (data: DepartmentData[], nodeId: number): DepartmentData[] => {
+  return data.filter(node => {
+    if (node.id === nodeId) {
+      return false; // 删除该节点
+    }
+    if (node.children && node.children.length > 0) {
+      node.children = deleteNodeFromTree(node.children, nodeId);
+    }
+    return true;
+  });
+};
+
 const DepartmentManagement = () => {
   // 部门数据
   const [departmentData, setDepartmentData] = useState<DepartmentData[]>([]);
@@ -242,21 +312,23 @@ const DepartmentManagement = () => {
       console.log("搜索参数:", searchParams);
       console.log("分页参数:", { page: pageData.page, pageSize: pageData.pageSize });
       
-      // 这里使用模拟数据
-      setDepartmentData(mockDepartmentData);
-      const processedTreeData = processTreeData(mockDepartmentData);
-      setProcessedData(processedTreeData);
-      
-      // 默认展开第一级
-      const firstLevelKeys = mockDepartmentData.map(item => item.id.toString());
-      setExpandedRowKeys(firstLevelKeys);
+      // 如果departmentData为空，才使用mockDepartmentData初始化
+      if (departmentData.length === 0) {
+        setDepartmentData(mockDepartmentData);
+        const processedTreeData = processTreeData(mockDepartmentData);
+        setProcessedData(processedTreeData);
+        
+        // 默认展开第一级
+        const firstLevelKeys = mockDepartmentData.map(item => item.id.toString());
+        setExpandedRowKeys(firstLevelKeys);
+      }
       
       message.success("数据加载成功");
     } catch (e) {
       console.log("获取部门数据失败:", e);
       message.error("获取部门数据失败");
     }
-  }, [pageData.page, pageData.pageSize, searchParams]);
+  }, [pageData.page, pageData.pageSize, searchParams, departmentData.length]);
 
   // 处理展开/收起
   const handleExpand = (expanded: boolean, record: DepartmentData) => {
@@ -309,11 +381,37 @@ const DepartmentManagement = () => {
   const confirmDelete = async () => {
     if (currentDept?.id) {
       try {
-        // 这里调用删除API
+        // 检查是否有子部门
+        const hasChildren = (data: DepartmentData[], nodeId: number): boolean => {
+          for (const node of data) {
+            if (node.id === nodeId && node.children && node.children.length > 0) {
+              return true;
+            }
+            if (node.children && node.children.length > 0) {
+              if (hasChildren(node.children, nodeId)) {
+                return true;
+              }
+            }
+          }
+          return false;
+        };
+
+        if (hasChildren(departmentData, currentDept.id)) {
+          message.error("该部门下还有子部门，无法删除");
+          setIsDeleteModalVisible(false);
+          return;
+        }
+
+        // 从本地数据中删除部门
+        const updatedData = deleteNodeFromTree(departmentData, currentDept.id);
+        setDepartmentData(updatedData);
+        
+        // 更新处理后的数据用于表格显示
+        const processedTreeData = processTreeData(updatedData);
+        setProcessedData(processedTreeData);
+        
         console.log("删除部门 ID:", currentDept.id);
         message.success("删除成功");
-        // 重新获取数据
-        getDepartmentData();
       } catch (error: unknown) {
         console.error(error);
         message.error("删除失败");
@@ -325,9 +423,31 @@ const DepartmentManagement = () => {
   // 处理新增
   const handleAdd = async () => {
     try {
-      console.log("新增部门:", newDept);
+      // 验证必填字段
+      if (!newDept.deptName) {
+        message.error("部门名称不能为空");
+        return;
+      }
+
+      // 创建新部门对象
+      const newDeptWithId: DepartmentData = {
+        ...newDept,
+        id: getMaxId(departmentData) + 1,
+        createTime: new Date().toLocaleString(),
+      };
+
+      // 更新本地数据
+      const updatedData = addNodeToTree(departmentData, newDeptWithId, newDept.parentId);
+      setDepartmentData(updatedData);
+      
+      // 更新处理后的数据用于表格显示
+      const processedTreeData = processTreeData(updatedData);
+      setProcessedData(processedTreeData);
+      
+      console.log("新增部门:", newDeptWithId);
       message.success("新增成功");
       setIsAddModalVisible(false);
+      
       // 重置表单
       setNewDept({
         deptName: "",
@@ -338,8 +458,6 @@ const DepartmentManagement = () => {
         email: "",
         status: true,
       });
-      // 重新获取数据
-      getDepartmentData();
     } catch (e) {
       console.log("新增失败:", e);
       message.error("新增失败");
@@ -349,11 +467,25 @@ const DepartmentManagement = () => {
   // 处理编辑保存
   const handleEditSave = async () => {
     try {
+      if (!currentDept) return;
+      
+      // 验证必填字段
+      if (!currentDept.deptName) {
+        message.error("部门名称不能为空");
+        return;
+      }
+
+      // 更新本地数据
+      const updatedData = updateNodeInTree(departmentData, currentDept);
+      setDepartmentData(updatedData);
+      
+      // 更新处理后的数据用于表格显示
+      const processedTreeData = processTreeData(updatedData);
+      setProcessedData(processedTreeData);
+      
       console.log("保存部门信息:", currentDept);
       message.success("保存成功");
       setIsEditModalVisible(false);
-      // 重新获取数据
-      getDepartmentData();
     } catch (e) {
       console.log("保存失败:", e);
       message.error("保存失败");
@@ -372,11 +504,30 @@ const DepartmentManagement = () => {
   // 处理状态切换
   const handleStatusChange = async (id: number, status: boolean) => {
     try {
+      // 在树形数据中更新状态
+      const updateStatus = (data: DepartmentData[]): DepartmentData[] => {
+        return data.map(node => {
+          if (node.id === id) {
+            return { ...node, status };
+          } else if (node.children && node.children.length > 0) {
+            return {
+              ...node,
+              children: updateStatus(node.children)
+            };
+          }
+          return node;
+        });
+      };
+
+      const updatedData = updateStatus(departmentData);
+      setDepartmentData(updatedData);
+      
+      // 更新处理后的数据用于表格显示
+      const processedTreeData = processTreeData(updatedData);
+      setProcessedData(processedTreeData);
+      
       console.log(`切换部门 ${id} 状态为:`, status);
-      // 这里应该调用API更新状态
       message.success("状态更新成功");
-      // 重新获取数据
-      getDepartmentData();
     } catch (e) {
       console.log("状态更新失败:", e);
       message.error("状态更新失败");

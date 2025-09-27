@@ -388,7 +388,7 @@ const UserList = () => {
               <Input
                 value={currentUser.nickname}
                 onChange={(e) =>
-                  setCurrentUser({ ...currentUser, username: e.target.value })
+                  setCurrentUser({ ...currentUser, nickname: e.target.value })
                 }
               />
             </Form.Item>

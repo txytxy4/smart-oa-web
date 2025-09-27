@@ -108,16 +108,18 @@ const RoleManagement = () => {
       console.log("搜索参数:", searchParams);
       console.log("分页参数:", { page: pageData.page, pageSize: pageData.pageSize });
       
-      // 这里使用模拟数据
-      setRoleData(mockRoleData);
-      setPageData(prev => ({ ...prev, total: mockRoleData.length }));
+      // 如果roleData为空，才使用mockRoleData初始化
+      if (roleData.length === 0) {
+        setRoleData(mockRoleData);
+        setPageData(prev => ({ ...prev, total: mockRoleData.length }));
+      }
       
       message.success("数据加载成功");
     } catch (e) {
       console.log("获取角色数据失败:", e);
       message.error("获取角色数据失败");
     }
-  }, [pageData.page, pageData.pageSize, searchParams]);
+  }, [pageData.page, pageData.pageSize, searchParams, roleData.length]);
 
   // 处理编辑按钮点击
   const handleEdit = (record: RoleData) => {
@@ -137,11 +139,12 @@ const RoleManagement = () => {
   const confirmDelete = async () => {
     if (currentRole?.id) {
       try {
-        // 这里调用删除API
+        // 从本地数据中过滤掉要删除的角色
+        const filteredRoleData = roleData.filter(role => role.id !== currentRole.id);
+        setRoleData(filteredRoleData);
+        
         console.log("删除角色 ID:", currentRole.id);
         message.success("删除成功");
-        // 重新获取数据
-        getRoleData();
       } catch (error: unknown) {
         console.error(error);
         message.error("删除失败");
@@ -153,9 +156,26 @@ const RoleManagement = () => {
   // 处理新增
   const handleAdd = async () => {
     try {
-      console.log("新增角色:", newRole);
+      // 验证必填字段
+      if (!newRole.roleName || !newRole.roleCode) {
+        message.error("角色名称和权限字符不能为空");
+        return;
+      }
+
+      // 创建新角色对象，生成一个新的ID（实际项目中ID应该由后端生成）
+      const newRoleWithId: RoleData = {
+        ...newRole,
+        id: roleData.length + 1,
+        createTime: new Date().toLocaleString(),
+      };
+
+      // 更新本地数据
+      setRoleData([...roleData, newRoleWithId]);
+      
+      console.log("新增角色:", newRoleWithId);
       message.success("新增成功");
       setIsAddModalVisible(false);
+      
       // 重置表单
       setNewRole({
         roleName: "",
@@ -164,8 +184,6 @@ const RoleManagement = () => {
         status: true,
         remark: "",
       });
-      // 重新获取数据
-      getRoleData();
     } catch (e) {
       console.log("新增失败:", e);
       message.error("新增失败");
@@ -175,11 +193,18 @@ const RoleManagement = () => {
   // 处理编辑保存
   const handleEditSave = async () => {
     try {
+      if (!currentRole) return;
+      
+      // 直接更新本地数据
+      const updatedRoleData = roleData.map(role => 
+        role.id === currentRole.id ? currentRole : role
+      );
+      
+      // 更新状态
+      setRoleData(updatedRoleData);
       console.log("保存角色信息:", currentRole);
       message.success("保存成功");
       setIsEditModalVisible(false);
-      // 重新获取数据
-      getRoleData();
     } catch (e) {
       console.log("保存失败:", e);
       message.error("保存失败");
