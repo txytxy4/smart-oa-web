@@ -17,7 +17,7 @@ interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
 
 // 创建 axios 实例
 const service: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000', // 修正baseURL
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://192.168.1.104:3001', // 修正baseURL
   timeout: 10000,
   // headers: {
   //   'Content-Type': 'application/json',
