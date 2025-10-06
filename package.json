@@ -13,6 +13,8 @@
     "@ant-design/icons": "^5.6.1",
     "antd": "4.24.16",
     "axios": "^1.10.0",
+    "echarts": "^5.6.0",
+    "echarts-for-react": "^3.0.2",
     "file-saver": "^2.0.5",
     "form-render": "^2.5.5",
     "fr-generator": "^2.8.9",
