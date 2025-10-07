@@ -11,7 +11,8 @@ import type {
     ApiResponse,
     PageRequest,
     UserListResponse,
-    UploadAvatarResponse
+    UploadAvatarResponse,
+    CaptchaInfo
 } from "./user.type";
 
 /**
@@ -100,4 +101,12 @@ export const deleteUser = (userId: number): Promise<ApiResponse<string>> => {
  */
 export const resetUserPassword = (userId: number): Promise<ApiResponse<string>> => {
     return service.post(`/user/${userId}/reset-password`);
+};
+
+/**
+ * 获取登录验证信息
+ */
+
+export const getCaptcha = (): Promise<ApiResponse<CaptchaInfo>> => {
+    return service.get('/captcha/generate');
 };

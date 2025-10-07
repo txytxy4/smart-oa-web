@@ -2,6 +2,8 @@
 export interface LoginRequest {
     username: string;
     password: string;
+    captchaId: string;
+    captchaCode: string;
 }
 
 // 用户注册请求参数
@@ -10,6 +12,8 @@ export interface RegisterRequest {
     password: string;
     email?: string;
     phone?: string;
+    captchaId?: string;
+    captchaCode?: string;
 }
 
 // 用户信息
@@ -121,6 +125,12 @@ export interface PageResponse<T = unknown> {
     total: number;
     page: number;
     pageSize: number;
+}
+
+// 验证信息
+export interface CaptchaInfo {
+    captchaSvg: string;
+    captchaId: string;
 }
 
 
