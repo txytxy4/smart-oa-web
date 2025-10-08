@@ -54,12 +54,11 @@ export default function ResizableSplitPane(props: ResizableSplitPaneProps) {
     onResize?.(next); // 触发回调
     try {
       if (storageKey) localStorage.setItem(storageKey, String(next));
-    } catch {
-      // ignore storage errors
+    } catch (e) {
+        console.log('e', e)
     }
   }, [minRight, minLeft, onResize, storageKey]);
 
-  // clamp leftWidth when window/container resizes
   useEffect(() => {
     const onResize = () => {
       const c = containerRef.current;
@@ -80,7 +79,6 @@ export default function ResizableSplitPane(props: ResizableSplitPaneProps) {
         ? (e as TouchEvent).touches[0].clientX 
         : (e as MouseEvent).clientX;
       doResize(clientX);
-      // prevent scrolling while dragging on touch
       if ((e as TouchEvent).touches) e.preventDefault();
     }
 
@@ -120,8 +118,8 @@ export default function ResizableSplitPane(props: ResizableSplitPaneProps) {
     onResize?.(initialLeftWidth); // 触发回调
     try {
       if (storageKey) localStorage.setItem(storageKey, String(initialLeftWidth));
-    } catch {
-      // ignore storage errors
+    } catch (e) {
+      console.log('err', e)
     }
   }
 
