@@ -11,6 +11,7 @@ import {
   Avatar,
   Upload,
   Checkbox,
+  Card,
 } from "antd";
 import type { UploadChangeParam } from "antd/es/upload";
 import {
@@ -19,6 +20,8 @@ import {
   DownloadOutlined,
 } from "@ant-design/icons";
 import TableComponent from "@/components/Table";
+import ResizableSplitPane from "@/components/ResizableSplitPane";
+import DepartmentTree from "@/components/DepartmentTree";
 import { getUserList, register, deleteUser, updateUserInfo } from "@/api/user/user";
 import styles from "./index.module.scss";
 import { exportToExcel } from "@/hooks/exportToExcel";
@@ -84,6 +87,8 @@ const UserList = () => {
   // 导入相关状态
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [updateExisting, setUpdateExisting] = useState(false);
+  // 选中的部门
+  const [selectedDepartment, setSelectedDepartment] = useState<string>('深圳科技有限公司');
 
   //获取用户数据
   const getUserData = useCallback(async () => {
@@ -241,15 +246,37 @@ const UserList = () => {
     }
   }
 
+  // 处理部门选择
+  const handleDepartmentSelect = (selectedKeys: React.Key[], departmentName?: string) => {
+    console.log('选中的部门:', selectedKeys, departmentName);
+    if (departmentName) {
+      setSelectedDepartment(departmentName);
+      // 这里可以根据选中的部门过滤用户数据
+      // 重新获取该部门的用户数据
+      getUserData();
+    }
+  };
+
 
 
   useEffect(() => {
     getUserData();
   }, [getUserData]);
 
-  return (
-    <div>
-      <Form layout="inline">
+  // 左侧部门树面板
+  const leftPanel = (
+    <DepartmentTree onSelect={handleDepartmentSelect} />
+  );
+
+  // 右侧用户列表面板
+  const rightPanel = (
+    <Card 
+      title={`用户管理 - ${selectedDepartment}`}
+      size="small"
+      style={{ height: '100%', border: 'none' }}
+      bodyStyle={{ height: 'calc(100% - 57px)', overflow: 'auto' }}
+    >
+      <Form layout="inline" style={{ marginBottom: 16 }}>
         <Form.Item label="用户名" name="username">
           <Input
             style={{ width: 200 }}
@@ -313,6 +340,7 @@ const UserList = () => {
           </Button>
         </Form.Item>
       </Form>
+      
       <TableComponent<UserData>
         data={userData}
         toolbarRender={(_, selectedRows) => (
@@ -345,7 +373,7 @@ const UserList = () => {
         <Column
           title="头像"
           key="avatarUrl"
-          render={(_, record) =>
+          render={(_, record: UserData) =>
             record.avatarUrl && (
               <Avatar src={`http://${record.avatarUrl}`} size={40} />
             )
@@ -357,7 +385,7 @@ const UserList = () => {
         <Column
           title="操作"
           key="action"
-          render={(_, record) => (
+          render={(_, record: UserData) => (
             <Space>
               <Button type="link" onClick={() => handleEdit(record)}>
                 编辑
@@ -369,6 +397,24 @@ const UserList = () => {
           )}
         />
       </TableComponent>
+    </Card>
+  );
+
+  return (
+    <div style={{ height: 'calc(100vh - 120px)' }}>
+      <ResizableSplitPane
+        left={leftPanel}
+        right={rightPanel}
+        initialLeftWidth={280}
+        minLeft={200}
+        minRight={600}
+        storageKey="user-list-layout"
+        style={{ 
+          borderRadius: '8px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          border: '1px solid #f0f0f0'
+        }}
+      />
 
       {/* 编辑用户模态框 */}
       <Modal
