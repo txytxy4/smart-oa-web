@@ -8,6 +8,7 @@ import type { UserInfo } from '@/api/user/user.type';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getBreadcrumbByPath, routeConfig } from '@/config/breadcrumb';
 import { useTabStore } from '@/store/tabs';
+import NotificationCenter from '@/components/NotificationCenter';
 
 
 interface HeaderProps {
@@ -147,14 +148,18 @@ const Header = ({ collapsed, onCollapse }: HeaderProps) => {
                 style={{ fontSize: '16px', width: 40, height: 40 }}
             />
             <div style={{ flex: 1 }}>
-                <Breadcrumb 
-                    style={{ color: '#fff' }}
-                    items={getBreadcrumbByPath(location.pathname).map(item => ({
-                        title: item.title,
-                        onClick: item.path ? () => navigate(item.path!) : undefined,
-                        style: item.path ? { cursor: 'pointer' } : undefined
-                    }))}
-                />
+                <Breadcrumb style={{ color: '#fff' }}>
+                    {getBreadcrumbByPath(location.pathname).map((item, index) => (
+                        <Breadcrumb.Item 
+                            key={index}
+                            onClick={item.path ? () => navigate(item.path!) : undefined}
+                        >
+                            <span style={item.path ? { cursor: 'pointer' } : undefined}>
+                                {item.title}
+                            </span>
+                        </Breadcrumb.Item>
+                    ))}
+                </Breadcrumb>
             </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -185,6 +190,11 @@ const Header = ({ collapsed, onCollapse }: HeaderProps) => {
                 }}
                 title={isFullscreen ? "退出全屏" : "进入全屏"}
             />
+            
+            {/* 通知中心 */}
+            <div style={{ color: '#fff' }}>
+                <NotificationCenter />
+            </div>
             
             <div className={styles.icon}>
                 <Image src={reactIcon} width={30} height={30} preview={false}></Image>

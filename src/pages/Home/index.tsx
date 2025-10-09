@@ -30,7 +30,7 @@ interface StatsData {
   orderTrend: number;
   revenueTrend: number;
 }
-
+    
 const Home = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -479,12 +479,12 @@ const Home = () => {
   };
 
   if (loading) {
-    return (
+  return (
       <div className={styles.homePage}>
         <div className={styles.loadingContainer}>
           <Spin size="large" />
         </div>
-      </div>
+    </div>
     );
   }
 

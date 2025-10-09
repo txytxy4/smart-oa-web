@@ -1,0 +1,192 @@
+.notificationBell {
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+  
+  .bellIcon {
+    font-size: 18px;
+    color: #666;
+    transition: color 0.3s ease;
+    
+    &:hover {
+      color: #1890ff;
+    }
+  }
+}
+
+.notificationPopover {
+  .ant-popover-inner {
+    padding: 0;
+    border-radius: 8px;
+    box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05);
+  }
+}
+
+.notificationPanel {
+  width: 360px;
+  max-height: 480px;
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 16px 12px;
+    border-bottom: 1px solid #f0f0f0;
+    background: #fafafa;
+    border-radius: 8px 8px 0 0;
+  }
+  
+  .content {
+    max-height: 400px;
+    overflow-y: auto;
+    
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 3px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 3px;
+      
+      &:hover {
+        background: #a8a8a8;
+      }
+    }
+  }
+  
+  .empty {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 120px;
+    color: #999;
+  }
+}
+
+.notificationItem {
+  padding: 12px 16px !important;
+  border-bottom: 1px solid #f5f5f5;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: #f8f9fa;
+  }
+  
+  &:last-child {
+    border-bottom: none;
+  }
+  
+  &.unread {
+    background-color: #f6ffed;
+    border-left: 3px solid #52c41a;
+    
+    &:hover {
+      background-color: #f0f9e7;
+    }
+  }
+  
+  .icon {
+    color: #1890ff;
+    font-size: 16px;
+  }
+  
+  .title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+    
+    .dot {
+      width: 6px;
+      height: 6px;
+      background-color: #ff4d4f;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+  }
+  
+  .description {
+    color: #666;
+    font-size: 13px;
+    line-height: 1.4;
+    margin-bottom: 4px;
+  }
+  
+  .time {
+    font-size: 12px !important;
+    color: #999 !important;
+  }
+}
+
+// 响应式设计
+@media (max-width: 768px) {
+  .notificationPanel {
+    width: 320px;
+    max-height: 400px;
+    
+    .content {
+      max-height: 320px;
+    }
+  }
+}
+
+// 动画效果
+@keyframes bellShake {
+  0%, 100% { transform: rotate(0deg); }
+  10%, 30%, 50%, 70%, 90% { transform: rotate(-10deg); }
+  20%, 40%, 60%, 80% { transform: rotate(10deg); }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.notificationBell.hasNew {
+  .bellIcon {
+    animation: bellShake 0.8s ease-in-out;
+    color: #1890ff;
+  }
+}
+
+.notificationPanel {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.notificationItem {
+  animation: slideInRight 0.3s ease-out;
+  
+  &:nth-child(1) { animation-delay: 0.1s; }
+  &:nth-child(2) { animation-delay: 0.2s; }
+  &:nth-child(3) { animation-delay: 0.3s; }
+  &:nth-child(4) { animation-delay: 0.4s; }
+  &:nth-child(5) { animation-delay: 0.5s; }
+}
