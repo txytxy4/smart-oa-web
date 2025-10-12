@@ -6,8 +6,22 @@
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
+  
+  /* 主题变量 */
+  --primary-color: #1890ff;
+  --primary-color-hover: #40a9ff;
+  --primary-color-active: #096dd9;
+  --primary-color-disabled: #d9d9d9;
+  --primary-color-light: #e6f7ff;
+  --primary-color-border: #91d5ff;
+  --theme-mode: light;
+  
+  /* 衍生颜色 */
+  --success-color: #52c41a;
+  --warning-color: #faad14;
+  --error-color: #f5222d;
+  --info-color: var(--primary-color);
 }
-
 
 body {
   margin: 0;
@@ -15,6 +29,258 @@ body {
   min-width: 320px;
   min-height: 100vh;
   overflow-x: hidden;
+  transition: all 0.3s ease;
+}
+
+/* 暗色主题 */
+body.dark-theme {
+  --primary-color: #1890ff;
+  background-color: #141414;
+  color: #fff;
+}
+
+/* ===========================================
+   Antd 组件主题色覆盖 - 全局生效
+   =========================================== */
+
+/* 主要按钮 */
+.ant-btn-primary {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+  color: #fff !important;
+}
+
+.ant-btn-primary:hover,
+.ant-btn-primary:focus {
+  background-color: var(--primary-color-hover) !important;
+  border-color: var(--primary-color-hover) !important;
+}
+
+.ant-btn-primary:active {
+  background-color: var(--primary-color-active) !important;
+  border-color: var(--primary-color-active) !important;
+}
+
+.ant-btn-primary[disabled],
+.ant-btn-primary.ant-btn-disabled {
+  background-color: var(--primary-color-disabled) !important;
+  border-color: var(--primary-color-disabled) !important;
+}
+
+/* 链接按钮 */
+.ant-btn-link {
+  color: var(--primary-color) !important;
+}
+
+.ant-btn-link:hover,
+.ant-btn-link:focus {
+  color: var(--primary-color-hover) !important;
+}
+
+.ant-btn-link:active {
+  color: var(--primary-color-active) !important;
+}
+
+/* 文本按钮 */
+.ant-btn-text {
+  color: var(--primary-color) !important;
+}
+
+.ant-btn-text:hover,
+.ant-btn-text:focus {
+  color: var(--primary-color-hover) !important;
+  background-color: var(--primary-color-light) !important;
+}
+
+/* 虚线边框按钮 */
+.ant-btn-dashed {
+  border-color: var(--primary-color) !important;
+  color: var(--primary-color) !important;
+}
+
+.ant-btn-dashed:hover,
+.ant-btn-dashed:focus {
+  border-color: var(--primary-color-hover) !important;
+  color: var(--primary-color-hover) !important;
+}
+
+/* ===========================================
+   表单组件主题色
+   =========================================== */
+
+/* 输入框焦点 */
+.ant-input:focus,
+.ant-input-focused,
+.ant-input:hover {
+  border-color: var(--primary-color) !important;
+}
+
+.ant-input:focus,
+.ant-input-focused {
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2) !important;
+}
+
+/* 选择器 */
+.ant-select:not(.ant-select-disabled):hover .ant-select-selector {
+  border-color: var(--primary-color) !important;
+}
+
+.ant-select-focused .ant-select-selector {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2) !important;
+}
+
+.ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background-color: var(--primary-color-light) !important;
+  color: var(--primary-color) !important;
+}
+
+/* 日期选择器 */
+.ant-picker:hover,
+.ant-picker-focused {
+  border-color: var(--primary-color) !important;
+}
+
+.ant-picker-focused {
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2) !important;
+}
+
+/* 复选框 */
+.ant-checkbox-checked .ant-checkbox-inner {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+}
+
+.ant-checkbox:hover .ant-checkbox-inner,
+.ant-checkbox-input:focus + .ant-checkbox-inner {
+  border-color: var(--primary-color) !important;
+}
+
+/* 单选框 */
+.ant-radio-checked .ant-radio-inner {
+  border-color: var(--primary-color) !important;
+}
+
+.ant-radio-checked .ant-radio-inner::after {
+  background-color: var(--primary-color) !important;
+}
+
+.ant-radio:hover .ant-radio-inner,
+.ant-radio-input:focus + .ant-radio-inner {
+  border-color: var(--primary-color) !important;
+}
+
+/* 开关 */
+.ant-switch-checked {
+  background-color: var(--primary-color) !important;
+}
+
+/* 滑块 */
+.ant-slider-track {
+  background-color: var(--primary-color) !important;
+}
+
+.ant-slider-handle {
+  border-color: var(--primary-color) !important;
+}
+
+.ant-slider:hover .ant-slider-track {
+  background-color: var(--primary-color-hover) !important;
+}
+
+/* ===========================================
+   导航和菜单组件
+   =========================================== */
+
+/* 分页 */
+.ant-pagination-item-active {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+}
+
+.ant-pagination-item-active a {
+  color: #fff !important;
+}
+
+.ant-pagination-item:hover {
+  border-color: var(--primary-color) !important;
+}
+
+.ant-pagination-item:hover a {
+  color: var(--primary-color) !important;
+}
+
+/* 标签页 */
+.ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: var(--primary-color) !important;
+}
+
+.ant-tabs-ink-bar {
+  background-color: var(--primary-color) !important;
+}
+
+/* 进度条 */
+.ant-progress-bg {
+  background-color: var(--primary-color) !important;
+}
+
+/* 徽章 */
+.ant-badge-count {
+  background-color: var(--primary-color) !important;
+}
+
+/* ===========================================
+   表格组件
+   =========================================== */
+
+/* 表格排序 */
+.ant-table-column-sorter-up.active,
+.ant-table-column-sorter-down.active {
+  color: var(--primary-color) !important;
+}
+
+/* 表格筛选 */
+.ant-table-filter-trigger.active {
+  color: var(--primary-color) !important;
+}
+
+/* ===========================================
+   反馈组件
+   =========================================== */
+
+/* 加载中 */
+.ant-spin-dot-item {
+  background-color: var(--primary-color) !important;
+}
+
+/* 锚点 */
+.ant-anchor-link-title-active {
+  color: var(--primary-color) !important;
+}
+
+.ant-anchor-ink-bar::before {
+  background-color: var(--primary-color) !important;
+}
+
+/* ===========================================
+   自定义工具类
+   =========================================== */
+
+/* 主题色工具类 */
+.text-primary {
+  color: var(--primary-color) !important;
+}
+
+.bg-primary {
+  background-color: var(--primary-color) !important;
+}
+
+.border-primary {
+  border-color: var(--primary-color) !important;
+}
+
+.hover-primary:hover {
+  color: var(--primary-color-hover) !important;
 }
 
 @media (prefers-color-scheme: light) {
@@ -23,7 +289,7 @@ body {
     background-color: #ffffff;
   }
   a:hover {
-    color: #747bff;
+    color: var(--primary-color);
   }
   button {
     background-color: #f9f9f9;
