@@ -10,6 +10,7 @@ import { useLocation } from "react-router-dom";
 import { useTabStore } from "@/store/tabs";
 import { useEffect, useState } from "react";
 import { getTitleByPath } from "@/config/breadcrumb";
+import { snapdom } from '@zumer/snapdom';
 
 export default function Layout() {
   const [collapsed, setCollapsed] = useState(false);
@@ -26,6 +27,26 @@ export default function Layout() {
       path: location.pathname,
     });
   }, [location.pathname, addTab]);
+
+  // 截屏
+  const snapdomHandle = async () => {
+    // 获取元素
+    const element = document.querySelector('.ant-layout');
+    if (element) {
+      const capture = await snapdom(element, {
+        scale: 2,
+        backgroundColor: '#fff',
+        embedFonts: true,
+      });
+      const png = await capture.toPng();
+      const jpg = await capture.toJpg({ quality: 0.9 });
+
+      await capture.download({
+        format: 'png',
+        filename: 'chart-report-2024'
+      })
+    }
+  }
 
   return (
     <WebSocketProvider>
@@ -60,7 +81,7 @@ export default function Layout() {
               padding: 0,
               transition: 'width 0.2s'
             }}>
-              <Header collapsed={collapsed} onCollapse={setCollapsed} />
+              <Header collapsed={collapsed} onCollapse={setCollapsed} snapdomHandle={snapdomHandle} />
             </AntdLayout.Header>
           )}
           <AntdLayout style={{ 

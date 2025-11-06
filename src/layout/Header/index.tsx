@@ -1,6 +1,6 @@
 import styles from './index.module.scss';
 import {Image, Avatar, Modal, Popover, Button, Breadcrumb, Input, List} from "antd";
-import { UserOutlined, MenuUnfoldOutlined, MenuFoldOutlined, SearchOutlined, FullscreenOutlined, FullscreenExitOutlined } from '@ant-design/icons';
+import { UserOutlined, MenuUnfoldOutlined, MenuFoldOutlined, SearchOutlined, FullscreenOutlined, FullscreenExitOutlined, RadiusSettingOutlined } from '@ant-design/icons';
 import reactIcon from '@/assets/react.svg'
 import { useEffect, useState} from 'react';
 import { getUserInfo } from '@/api/user/user';
@@ -14,9 +14,10 @@ import NotificationCenter from '@/components/NotificationCenter';
 interface HeaderProps {
     collapsed: boolean;
     onCollapse: (collapsed: boolean) => void;
+    snapdomHandle: () => void;
 }
 
-const Header = ({ collapsed, onCollapse }: HeaderProps) => {
+const Header = ({ collapsed, onCollapse, snapdomHandle }: HeaderProps) => {
     const [user, setUser] = useState<UserInfo | null>(null); //用户信息
     const [dialog, setDialog] = useState<boolean>(false);
     const [searchVisible, setSearchVisible] = useState<boolean>(false); // 搜索弹窗状态
@@ -190,7 +191,13 @@ const Header = ({ collapsed, onCollapse }: HeaderProps) => {
                 }}
                 title={isFullscreen ? "退出全屏" : "进入全屏"}
             />
-            
+            <Button
+                type="text"
+                icon={<RadiusSettingOutlined />}
+                onClick={snapdomHandle}
+                style={{ fontSize: '16px', width: 40, height: 40, color: '#fff' }}
+                title="Snapdom"
+            />
             {/* 通知中心 */}
             <div style={{ color: '#fff' }}>
                 <NotificationCenter />

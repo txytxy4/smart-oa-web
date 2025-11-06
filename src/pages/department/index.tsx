@@ -17,6 +17,7 @@ import {
 } from "@ant-design/icons";
 import TableComponent from "@/components/Table";
 import styles from "./index.module.scss";
+import { createDepartment } from "@/api/department/department";
 
 // 部门数据接口
 interface DepartmentData {
@@ -203,46 +204,46 @@ const buildTreeSelectData = (data: DepartmentData[]): TreeSelectNode[] => {
 };
 
 // 获取树形数据中的最大ID
-const getMaxId = (data: DepartmentData[]): number => {
-  let maxId = 0;
-  const traverse = (nodes: DepartmentData[]) => {
-    nodes.forEach(node => {
-      if (node.id > maxId) {
-        maxId = node.id;
-      }
-      if (node.children && node.children.length > 0) {
-        traverse(node.children);
-      }
-    });
-  };
-  traverse(data);
-  return maxId;
-};
+// const getMaxId = (data: DepartmentData[]): number => {
+//   let maxId = 0;
+//   const traverse = (nodes: DepartmentData[]) => {
+//     nodes.forEach(node => {
+//       if (node.id > maxId) {
+//         maxId = node.id;
+//       }
+//       if (node.children && node.children.length > 0) {
+//         traverse(node.children);
+//       }
+//     });
+//   };
+//   traverse(data);
+//   return maxId;
+// };
 
-// 在树形数据中添加新节点
-const addNodeToTree = (data: DepartmentData[], newNode: DepartmentData, parentId: number): DepartmentData[] => {
-  if (parentId === 0) {
-    // 添加到根级
-    return [...data, newNode];
-  }
+// // 在树形数据中添加新节点
+// const addNodeToTree = (data: DepartmentData[], newNode: DepartmentData, parentId: number): DepartmentData[] => {
+//   if (parentId === 0) {
+//     // 添加到根级
+//     return [...data, newNode];
+//   }
   
-  return data.map(node => {
-    if (node.id === parentId) {
-      // 找到父节点，添加到children中
-      return {
-        ...node,
-        children: node.children ? [...node.children, newNode] : [newNode]
-      };
-    } else if (node.children && node.children.length > 0) {
-      // 递归查找父节点
-      return {
-        ...node,
-        children: addNodeToTree(node.children, newNode, parentId)
-      };
-    }
-    return node;
-  });
-};
+//   return data.map(node => {
+//     if (node.id === parentId) {
+//       // 找到父节点，添加到children中
+//       return {
+//         ...node,
+//         children: node.children ? [...node.children, newNode] : [newNode]
+//       };
+//     } else if (node.children && node.children.length > 0) {
+//       // 递归查找父节点
+//       return {
+//         ...node,
+//         children: addNodeToTree(node.children, newNode, parentId)
+//       };
+//     }
+//     return node;
+//   });
+// };
 
 // 在树形数据中更新节点
 const updateNodeInTree = (data: DepartmentData[], updatedNode: DepartmentData): DepartmentData[] => {
@@ -299,10 +300,8 @@ const DepartmentManagement = () => {
     deptName: "",
     parentId: 0,
     orderNum: 0,
-    leader: "",
-    phone: "",
-    email: "",
     status: true,
+    level: 1,
   });
 
   // 获取部门数据
@@ -428,23 +427,19 @@ const DepartmentManagement = () => {
         message.error("部门名称不能为空");
         return;
       }
+      const response = await createDepartment({
+        name: newDept.deptName,
+        parentId: newDept.parentId ? newDept.parentId : undefined,
+        order: newDept.orderNum,
+        lelvel: newDept.level,
+        status: newDept.status,
+      });
+      if (response.code === 200) {
+        message.success("新增成功");
+      } else {
+        message.error("新增失败");
+      }
 
-      // 创建新部门对象
-      const newDeptWithId: DepartmentData = {
-        ...newDept,
-        id: getMaxId(departmentData) + 1,
-        createTime: new Date().toLocaleString(),
-      };
-
-      // 更新本地数据
-      const updatedData = addNodeToTree(departmentData, newDeptWithId, newDept.parentId);
-      setDepartmentData(updatedData);
-      
-      // 更新处理后的数据用于表格显示
-      const processedTreeData = processTreeData(updatedData);
-      setProcessedData(processedTreeData);
-      
-      console.log("新增部门:", newDeptWithId);
       message.success("新增成功");
       setIsAddModalVisible(false);
       
@@ -453,9 +448,7 @@ const DepartmentManagement = () => {
         deptName: "",
         parentId: 0,
         orderNum: 0,
-        leader: "",
-        phone: "",
-        email: "",
+        level: 1,
         status: true,
       });
     } catch (e) {
@@ -726,27 +719,6 @@ const DepartmentManagement = () => {
               placeholder="请输入显示排序"
               value={newDept.orderNum}
               onChange={(e) => setNewDept({ ...newDept, orderNum: Number(e.target.value) })}
-            />
-          </Form.Item>
-          <Form.Item label="负责人">
-            <Input
-              placeholder="请输入负责人"
-              value={newDept.leader}
-              onChange={(e) => setNewDept({ ...newDept, leader: e.target.value })}
-            />
-          </Form.Item>
-          <Form.Item label="联系电话">
-            <Input
-              placeholder="请输入联系电话"
-              value={newDept.phone}
-              onChange={(e) => setNewDept({ ...newDept, phone: e.target.value })}
-            />
-          </Form.Item>
-          <Form.Item label="邮箱">
-            <Input
-              placeholder="请输入邮箱"
-              value={newDept.email}
-              onChange={(e) => setNewDept({ ...newDept, email: e.target.value })}
             />
           </Form.Item>
           <Form.Item label="部门状态">

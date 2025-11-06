@@ -11,6 +11,9 @@ importers:
       '@ant-design/icons':
         specifier: ^5.6.1
         version: 5.6.1(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@zumer/snapdom':
+        specifier: ^1.9.14
+        version: 1.9.14
       antd:
         specifier: 4.24.16
         version: 4.24.16(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -889,6 +892,9 @@ packages:
     resolution: {integrity: sha512-YTJCGFdNMHCMfjODYtxRNVAYmTWQ1Lb8PulP/2/f/oEEtglw8oKxKIZmmRkyXrVrHfsKOaVkAc3NT9/dMutO5w==}
     peerDependencies:
       vite: ^4 || ^5 || ^6 || ^7
+
+  '@zumer/snapdom@1.9.14':
+    resolution: {integrity: sha512-kQARFS/jf+fsIFv9qxfNp8YMeun5tTyhFDk3iv47Lywk5YRldhINWicEZI15fP3FDUCeo8ok+BP0CtnDRFMFRg==}
 
   acorn-jsx@5.3.2:
     resolution: {integrity: sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==}
@@ -2977,6 +2983,8 @@ snapshots:
       vite: 6.3.6(jiti@2.5.1)(less@4.4.1)(lightningcss@1.30.1)(sass@1.92.1)
     transitivePeerDependencies:
       - '@swc/helpers'
+
+  '@zumer/snapdom@1.9.14': {}
 
   acorn-jsx@5.3.2(acorn@8.15.0):
     dependencies:
