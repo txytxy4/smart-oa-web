@@ -17,7 +17,8 @@ import {
 } from "@ant-design/icons";
 import TableComponent from "@/components/Table";
 import styles from "./index.module.scss";
-import { createDepartment } from "@/api/department/department";
+import { createDepartment, getDepartmentList } from "@/api/department/department";
+import { DepartmentInfo } from "@/api/department/department.type";
 
 // 部门数据接口
 interface DepartmentData {
@@ -35,9 +36,11 @@ interface DepartmentData {
 
 // 搜索参数接口
 interface SearchParams {
-  deptName?: string;
-  status?: string;
-  createTime?: [string, string] | null;
+  name?: string;
+  status?: false;
+  createTime?: string;
+  startTime?: string;
+  endTime?: string;
 }
 
 // 分页数据接口
@@ -275,14 +278,15 @@ const deleteNodeFromTree = (data: DepartmentData[], nodeId: number): DepartmentD
 
 const DepartmentManagement = () => {
   // 部门数据
-  const [departmentData, setDepartmentData] = useState<DepartmentData[]>([]);
+  const [departmentData, setDepartmentData] = useState<DepartmentInfo[]>([]);
   const [processedData, setProcessedData] = useState<DepartmentData[]>([]);
   const [searchParams, setSearchParams] = useState<SearchParams>({
-    deptName: "",
-    status: "",
-    createTime: null,
+    name: "",
+    status: undefined,
+    startTime: "",
+    endTime: "",
   });
-  const [pageData] = useState<PageData>({
+  const [pageData, setPageData] = useState<PageData>({
     page: 1,
     pageSize: 10,
     total: 0,
@@ -310,16 +314,20 @@ const DepartmentManagement = () => {
       // 模拟API调用
       console.log("搜索参数:", searchParams);
       console.log("分页参数:", { page: pageData.page, pageSize: pageData.pageSize });
-      
-      // 如果departmentData为空，才使用mockDepartmentData初始化
-      if (departmentData.length === 0) {
-        setDepartmentData(mockDepartmentData);
-        const processedTreeData = processTreeData(mockDepartmentData);
-        setProcessedData(processedTreeData);
-        
-        // 默认展开第一级
-        const firstLevelKeys = mockDepartmentData.map(item => item.id.toString());
-        setExpandedRowKeys(firstLevelKeys);
+    
+      const res = await getDepartmentList({
+        page: pageData.page,
+        pageSize: pageData.pageSize,
+        ...searchParams,
+      });
+      if (res.code === 200) {
+        console.log("data", res.data);
+        setDepartmentData(res.data.list);
+        setPageData({
+          page: res.data.page,
+          pageSize: res.data.pageSize,
+          total: res.data.total,
+        });
       }
       
       message.success("数据加载成功");
@@ -327,7 +335,7 @@ const DepartmentManagement = () => {
       console.log("获取部门数据失败:", e);
       message.error("获取部门数据失败");
     }
-  }, [pageData.page, pageData.pageSize, searchParams, departmentData.length]);
+  }, [pageData.page, pageData.pageSize, searchParams]);
 
   // 处理展开/收起
   const handleExpand = (expanded: boolean, record: DepartmentData) => {
