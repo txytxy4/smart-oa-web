@@ -329,7 +329,6 @@ const DepartmentManagement = () => {
           total: res.data.total,
         });
       }
-      
       message.success("数据加载成功");
     } catch (e) {
       console.log("获取部门数据失败:", e);
