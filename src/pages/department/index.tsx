@@ -301,7 +301,7 @@ const DepartmentManagement = () => {
 
   // 新增部门数据
   const [newDept, setNewDept] = useState({
-    deptName: "",
+    name: "",
     parentId: 0,
     orderNum: 0,
     status: true,
@@ -430,12 +430,12 @@ const DepartmentManagement = () => {
   const handleAdd = async () => {
     try {
       // 验证必填字段
-      if (!newDept.deptName) {
+      if (!newDept.name) {
         message.error("部门名称不能为空");
         return;
       }
       const response = await createDepartment({
-        name: newDept.deptName,
+        name: newDept.name,
         parentId: newDept.parentId ? newDept.parentId : undefined,
         order: newDept.orderNum,
         lelvel: newDept.level,
@@ -452,7 +452,7 @@ const DepartmentManagement = () => {
       
       // 重置表单
       setNewDept({
-        deptName: "",
+        name: "",
         parentId: 0,
         orderNum: 0,
         level: 1,
@@ -549,10 +549,10 @@ const DepartmentManagement = () => {
             onChange={(e) => {
               setSearchParams({
                 ...searchParams,
-                deptName: e.target.value,
+                name: e.target.value,
               });
             }}
-            value={searchParams?.deptName}
+            value={searchParams?.name}
           />
         </Form.Item>
         <Form.Item label="状态" name="status">
@@ -579,7 +579,8 @@ const DepartmentManagement = () => {
             onChange={(dates, dateStrings) => {
               setSearchParams({
                 ...searchParams,
-                createTime: dates ? [dateStrings[0], dateStrings[1]] : null,
+                startTime: dates ? dateStrings[0] : undefined,
+                endTime: dates ? dateStrings[1] : undefined
               });
             }}
             placeholder={["开始日期", "结束日期"]}
@@ -602,8 +603,8 @@ const DepartmentManagement = () => {
       </Form>
 
       {/* 数据表格 */}
-      <TableComponent<DepartmentData>
-        data={processedData}
+      <TableComponent<DepartmentInfo>
+        data={departmentData}
         toolbarRender={() => (
           <div className={styles.tableHeader}>
             <Button 
@@ -627,14 +628,14 @@ const DepartmentManagement = () => {
       >
         <Column 
           title="部门名称" 
-          dataIndex="deptName" 
-          key="deptName"
+          dataIndex="name" 
+          key="name"
           width={300}
         />
         <Column 
           title="排序" 
-          dataIndex="orderNum" 
-          key="orderNum" 
+          dataIndex="order" 
+          key="order" 
           width={80}
         />
         <Column
@@ -652,8 +653,8 @@ const DepartmentManagement = () => {
         />
         <Column 
           title="创建时间" 
-          dataIndex="createTime" 
-          key="createTime" 
+          dataIndex="createdAt" 
+          key="createdAt"
           width={180}
         />
         <Column
@@ -707,7 +708,12 @@ const DepartmentManagement = () => {
               onChange={(value) => setNewDept({ ...newDept, parentId: value || 0 })}
               treeData={[
                 { value: 0, title: "主类目" },
-                ...buildTreeSelectData(departmentData)
+                departmentData.map(el => {
+                  return {
+                    value: el.parentId,
+                    title: el.name
+                  }
+                })
               ]}
               placeholder="选择上级部门"
               allowClear
@@ -716,8 +722,8 @@ const DepartmentManagement = () => {
           <Form.Item label="部门名称" required>
             <Input
               placeholder="请输入部门名称"
-              value={newDept.deptName}
-              onChange={(e) => setNewDept({ ...newDept, deptName: e.target.value })}
+              value={newDept.name}
+              onChange={(e) => setNewDept({ ...newDept, name: e.target.value })}
             />
           </Form.Item>
           <Form.Item label="显示排序">

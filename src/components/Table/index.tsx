@@ -1,7 +1,7 @@
 import { Table, Space } from "antd";
 import type { TablePaginationConfig, ExpandableConfig } from "antd";
 import type { TableRowSelection } from "antd/es/table/interface";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 
 // 定义props类型
 interface TableProps<T = unknown> {
@@ -30,14 +30,14 @@ const TableComponent = <T extends object>(props: TableProps<T>) => {
     const [selectedRows, setSelectedRows] = useState<T[]>([]);
     
     // 配置行选择
-    const rowSelection: TableRowSelection<T> | undefined = showCheckbox ? {
+    const rowSelection = useMemo<TableRowSelection<T> | undefined>(() => showCheckbox ? ({
         selectedRowKeys,
         onChange: (selectedKeys: React.Key[], selectedRows: T[]) => {
-            setSelectedRowKeys(selectedKeys);
-            setSelectedRows(selectedRows);
-            onSelectChange?.(selectedKeys, selectedRows);
+          setSelectedRowKeys(selectedKeys);
+          setSelectedRows(selectedRows);
+          onSelectChange?.(selectedKeys, selectedRows);
         }
-    } : undefined;
+      }) : undefined, [showCheckbox, selectedRowKeys, onSelectChange]);
 
     return (
         <Space direction="vertical" size="middle" style={{ width: "100%" }}>
@@ -51,7 +51,7 @@ const TableComponent = <T extends object>(props: TableProps<T>) => {
                 rowKey={(record) => {
                     // 使用类型安全的方式检查id属性
                     const recordWithId = record as { id?: string | number };
-                    return recordWithId.id ? String(recordWithId.id) : Math.random().toString();
+                    return recordWithId.id ? String(recordWithId.id) : crypto.randomUUID();
                 }}
             >
                 {children}
@@ -60,4 +60,4 @@ const TableComponent = <T extends object>(props: TableProps<T>) => {
     );
 };
 
-export default TableComponent;
+export default React.memo(TableComponent) as typeof TableComponent;
